@@ -1,2 +1,8 @@
 ﻿[phases.setup]
-nixPkgs = ["cairo", "pkg-config", "gobject-introspection", "libffi"]
+nixPkgs = ["python3", "cairo", "pkg-config", "gobject-introspection", "libffi", "zlib", "jpeg", "giflib"]
+
+[phases.install]
+cmds = ["python -m pip install -r requirements.txt"]
+
+[start]
+cmd = "uvicorn main:app --host 0.0.0.0 --port "
