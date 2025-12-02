@@ -1,5 +1,6 @@
 ﻿[phases.setup]
 nixPkgs = ["python3", "cairo", "pkg-config", "gobject-introspection", "libffi", "zlib", "jpeg", "giflib", "sqlite"]
+aptPkgs = ["libsqlite3-0", "libsqlite3-dev"]
 
 [phases.install]
 cmds = ["python -m pip install -r requirements.txt"]
