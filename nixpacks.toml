@@ -1,5 +1,5 @@
 ﻿[phases.setup]
-nixPkgs = ["python3", "cairo", "pkg-config", "gobject-introspection", "libffi", "zlib", "jpeg", "giflib"]
+nixPkgs = ["python3", "cairo", "pkg-config", "gobject-introspection", "libffi", "zlib", "jpeg", "giflib", "sqlite"]
 
 [phases.install]
 cmds = ["python -m pip install -r requirements.txt"]
