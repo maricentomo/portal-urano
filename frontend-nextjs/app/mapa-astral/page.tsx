@@ -83,6 +83,7 @@ export default function MapaAstralPage() {
             setStatusMessage('');
 
             // Mensagem inicial do sistema (simulada)
+            // Mensagem inicial do sistema (simulada)
             const initialMessage = `
 # INÍCIO DA CONSULTA ASTROLÓGICA
 
@@ -96,12 +97,13 @@ ${data.positions.map((pos: any) =>
                 `| ${pos.planet} | ${pos.sign} | ${pos.degree}° | ${pos.house} | ${pos.retrograde ? 'Sim' : 'Não'} |`
             ).join('\n')}
 
-Vamos analisar seu mapa natal seguindo uma estrutura técnica e didática. A cada seção, farei uma pausa para verificar se a análise está fazendo sentido para você.
-
-Podemos começar com a Visão Geral do Mapa?
+Aguarde enquanto gero a análise completa do seu mapa...
             `;
 
             setMessages([{ role: 'assistant', content: initialMessage }]);
+
+            // Disparar a análise automática
+            await sendAnalysisRequest(data);
 
         } catch (error: any) {
             console.error('Erro:', error);
@@ -111,23 +113,17 @@ Podemos começar com a Visão Geral do Mapa?
         }
     };
 
-    // Manipulação do Chat
-    const sendMessage = async () => {
-        if (!inputMessage.trim() || isLoading) return;
-
-        const userMessage: Message = { role: 'user', content: inputMessage };
-        setMessages(prev => [...prev, userMessage]);
-        setInputMessage('');
+    // Função para enviar o pedido de análise automática
+    const sendAnalysisRequest = async (mapData: any) => {
         setIsLoading(true);
-
         try {
             const response = await fetch(CHAT_API_URL, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({
-                    message: inputMessage,
-                    history: messages,
-                    map_data: mapData // Enviando dados do mapa!
+                    message: "Faça a análise completa do meu mapa seguindo as instruções do sistema.",
+                    history: [],
+                    map_data: mapData
                 })
             });
 
@@ -142,7 +138,7 @@ Podemos começar com a Visão Geral do Mapa?
             console.error('Erro:', error);
             setMessages(prev => [
                 ...prev,
-                { role: 'assistant', content: `❌ Erro: ${error.message || 'Ocorreu um erro ao processar sua mensagem.'} ` }
+                { role: 'assistant', content: `❌ Erro: ${error.message || 'Ocorreu um erro ao processar sua análise.'}` }
             ]);
         } finally {
             setIsLoading(false);
@@ -278,28 +274,7 @@ Podemos começar com a Visão Geral do Mapa?
                             <div ref={messagesEndRef} />
                         </div>
 
-                        <div className="chat-input-wrapper">
-                            <div className="chat-input-container">
-                                <input
-                                    type="text"
-                                    className="chat-input"
-                                    placeholder="Faça sua pergunta sobre Mapa Astral..."
-                                    value={inputMessage}
-                                    onChange={(e) => setInputMessage(e.target.value)}
-                                    onKeyPress={(e) => e.key === 'Enter' && !e.shiftKey && sendMessage()}
-                                    disabled={isLoading}
-                                />
-                                <button
-                                    className="chat-send-btn"
-                                    onClick={sendMessage}
-                                    disabled={isLoading}
-                                >
-                                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                                        <path d="M22 2L11 13M22 2l-7 20-4-9-9-4 20-7z" />
-                                    </svg>
-                                </button>
-                            </div>
-                        </div>
+                        {/* Chat input removido conforme solicitado */}
                     </>
                 )}
             </div>
