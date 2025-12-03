@@ -338,9 +338,9 @@ def render():
             # Adicionar resposta ao histórico
             st.session_state.messages.append({"role": "assistant", "content": full_response})
                     
-                    # Rerun para atualizar a interface e remover o estado de sugestão se houver
-                    st.rerun()
+            # Rerun para atualizar a interface e remover o estado de sugestão se houver
+            st.rerun()
 
-                except Exception as e:
-                    st.error(f"Erro ao gerar resposta: {e}")
+        except Exception as e:
+            st.error(f"Erro ao gerar resposta: {e}")
 
