@@ -1,4 +1,4 @@
-/* Custom Font */
+﻿/* Custom Font */
 @font-face {
     font-family: 'TAN AEGEAN';
     src: url('/TAN AEGEAN Regular.woff2') format('woff2');
@@ -23,7 +23,7 @@ body {
     position: relative;
 }
 
-/* Fundo estrelado com 30% de transparência */
+/* Fundo estrelado com 30% de transparÃªncia */
 body::before {
     content: '';
     position: fixed;
@@ -50,9 +50,6 @@ body::before {
 
 /* Sidebar Styles */
 .sidebar {
-    position: fixed;
-    top: 0;
-    left: 0;
     width: 256px;
     min-width: 256px;
     height: 100vh;
@@ -614,10 +611,139 @@ body::before {
     cursor: pointer;
 }
 
+.astro-form {
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+}
+
+.form-row {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 20px;
+}
+
+.form-group {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.form-group label {
+    font-size: 0.9rem;
+    font-weight: 600;
+    color: #a3a2a2;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+}
+
+.form-group input {
+    padding: 14px 16px;
+    background-color: #111111;
+    border: 1px solid #333;
+    border-radius: 12px;
+    color: #b0b0b0;
+    font-family: 'Open Sans', sans-serif;
+    font-size: 1rem;
+    outline: none;
+    transition: all 0.2s ease;
+}
+
+.form-group input::placeholder {
+    color: #555;
+}
+
+.form-group input:focus {
+    border-color: #893f89;
+    background-color: rgba(137, 63, 137, 0.05);
+}
+
+/* Date and Time inputs specific styling */
+.form-group input[type="date"],
+.form-group input[type="time"] {
+    color-scheme: dark;
+}
+
+.form-info {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 12px 16px;
+    background-color: rgba(137, 63, 137, 0.1);
+    border: 1px solid rgba(137, 63, 137, 0.3);
+    border-radius: 12px;
+    color: #b0b0b0;
+    font-size: 0.85rem;
+}
+
+/* Scrollbars personalizados - CUSTOM */
+.sidebar-nav::-webkit-scrollbar {
+    width: 4px;
+}
+
+.sidebar-nav::-webkit-scrollbar-track {
+    background: #000000;
+}
+
+.sidebar-nav::-webkit-scrollbar-thumb {
+    background: #893f89;
+    border-radius: 4px;
+}
+
+.sidebar-nav::-webkit-scrollbar-thumb:hover {
+    background: #a855b5;
+}
+
+.main-content::-webkit-scrollbar {
+    width: 4px;
+}
+
+.main-content::-webkit-scrollbar-track {
+    background: #000000;
+}
+
+.main-content::-webkit-scrollbar-thumb {
+    background: #893f89;
+    border-radius: 4px;
+}
+
+.main-content::-webkit-scrollbar-thumb:hover {
+    background: #a855b5;
+}
+
+/* Mobile Menu */
+.mobile-menu-btn {
+    display: none;
+    position: fixed;
+    top: 20px;
+    left: 20px;
+    z-index: 1001;
+    background: #893f89;
+    border: none;
+    padding: 6px;
+    border-radius: 8px;
+    color: white;
+    cursor: pointer;
+}
+
 .sidebar-overlay {
     display: none;
 }
 
+/* Desktop: sidebar fixed + main-content margin */
+@media (min-width: 769px) {
+    .sidebar {
+        position: fixed;
+        top: 0;
+        left: 0;
+    }
+    
+    .main-content {
+        margin-left: 256px;
+    }
+}
+
+/* Mobile: sidebar hidden off-screen */
 @media (max-width: 768px) {
     .mobile-menu-btn {
         display: block;
@@ -662,3 +788,69 @@ body::before {
         height: auto !important;
     }
 }
+
+/* Report Content Styles */
+.report-content {
+    color: #2c2c2c;
+    /* Dark gray for readability on beige */
+    font-family: 'Open Sans', sans-serif;
+    line-height: 1.8;
+    font-size: 1.05rem;
+}
+
+.report-content h1,
+.report-content h2,
+.report-content h3,
+.report-content h4 {
+    font-family: 'TAN AEGEAN', serif;
+    color: #893f89;
+    /* Purple accent */
+    margin-top: 2rem;
+    margin-bottom: 1rem;
+    font-weight: normal;
+}
+
+.report-content h1 {
+    font-size: 2.2rem;
+    border-bottom: 2px solid #893f89;
+    padding-bottom: 0.5rem;
+}
+
+.report-content h2 {
+    font-size: 1.8rem;
+}
+
+.report-content h3 {
+    font-size: 1.4rem;
+    color: #5a2a5a;
+}
+
+.report-content p {
+    margin-bottom: 1.5rem;
+    text-align: justify;
+}
+
+.report-content strong {
+    color: #893f89;
+    font-weight: 700;
+}
+
+.report-content ul,
+.report-content ol {
+    margin-bottom: 1.5rem;
+    padding-left: 1.5rem;
+}
+
+.report-content li {
+    margin-bottom: 0.5rem;
+}
+
+.report-content blockquote {
+    border-left: 4px solid #893f89;
+    padding-left: 1rem;
+    font-style: italic;
+    color: #555;
+    margin-bottom: 1.5rem;
+}
+
+
