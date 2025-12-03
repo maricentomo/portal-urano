@@ -425,7 +425,7 @@ async def chat_endpoint(request: ChatRequest):
     
     try:
         # Criar o modelo
-        model = genai.GenerativeModel('gemini-1.5-flash')
+        model = genai.GenerativeModel('gemini-2.0-flash')
         
         # Preparar histórico de conversa
         chat_history = []
@@ -827,7 +827,7 @@ async def send_message(
         if not GOOGLE_API_KEY:
             raise HTTPException(status_code=503, detail="IA não configurada")
         
-        model = genai.GenerativeModel('gemini-1.5-flash')
+        model = genai.GenerativeModel('gemini-2.0-flash')
         chat_history = []
         chat_history.append({"role": "user", "parts": [INSTRUCOES_SISTEMA]})
         chat_history.append({"role": "model", "parts": ["Entendido."]})
@@ -933,7 +933,7 @@ async def generate_report_endpoint(request: ReportRequest):
         prompt = get_report_prompt(request.name, map_data_dict, request.question)
         
         # 4. Enviar para IA e obter análise completa
-        model = genai.GenerativeModel('gemini-1.5-flash')
+        model = genai.GenerativeModel('gemini-2.0-flash')
         response = model.generate_content(prompt)
         
         # 5. Parsear resposta da IA em seções

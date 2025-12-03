@@ -321,18 +321,6 @@ def render():
 
             # Chamar o modelo
             # Usar st.spinner ou placeholder para streaming
-            with st.chat_message("assistant", avatar="logo_olho_final.jpg"):
-                message_placeholder = st.empty()
-
-                try:
-                    # Criar o modelo
-                    model = genai.GenerativeModel('gemini-1.5-flash')
-
-                    # Corrigir os papéis para compatibilidade com o modelo Gemini
-                    chat_history = []
-                    for m in mensagens:
-                        role = "model" if m["role"] in ["assistant", "system"] else "user"
-                        chat_history.append({"role": role, "parts": [m["content"]]})
 
                     # Gerar resposta com streaming
                     chat = model.start_chat(history=chat_history)
