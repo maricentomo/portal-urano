@@ -50,14 +50,19 @@ body::before {
 
 /* Sidebar Styles */
 .sidebar {
+    position: fixed;
+    top: 0;
+    left: 0;
     width: 256px;
     min-width: 256px;
-    flex-shrink: 0;
+    height: 100vh;
     background-color: #111111;
     border-right: 1px solid #333;
     display: flex;
     flex-direction: column;
     padding: 16px;
+    overflow-y: auto;
+    z-index: 10;
 }
 
 .sidebar-header {
@@ -72,7 +77,7 @@ body::before {
 
 .logo {
     width: 100%;
-    max-width: 150px;
+    height: 100%;
     border-radius: 8px;
     cursor: pointer;
     transition: transform 0.2s ease;
@@ -196,9 +201,12 @@ body::before {
 
 /* Main Content Area */
 .main-content {
+    margin-left: 256px;
     flex: 1;
+    height: 100vh;
     overflow-y: auto;
     position: relative;
+    z-index: 1;
 }
 
 .page {
@@ -208,6 +216,63 @@ body::before {
 
 .page.active {
     display: block;
+}
+
+/* Internal Pages Styles */
+.main-content> :not(#home-page) {
+    background-color: #e1d5be;
+    min-height: 100vh;
+    padding: 0;
+}
+
+/* Chat Page Styles (Mapa Astral, etc) */
+.chat-page {
+    background-color: #e1d5be;
+    min-height: 100vh;
+    padding: 0;
+}
+
+.chat-page .texture-banner {
+    height: 90px;
+    width: 100%;
+    margin: 0;
+    padding: 0;
+    display: block;
+}
+
+.chat-page .texture-banner img {
+    width: 100%;
+    object-fit: cover;
+    display: block;
+}
+
+.chat-center {
+    max-width: 900px;
+    margin: 0 auto;
+
+}
+
+.chat-history {
+    min-height: 400px;
+    margin-bottom: 100px;
+}
+
+.welcome-message {
+    text-align: center;
+    padding: 60px 20px;
+}
+
+.welcome-message h1 {
+    font-family: 'TAN AEGEAN', serif;
+    font-size: 2.5rem;
+    color: #893f89;
+    margin-bottom: 16px;
+}
+
+.welcome-message p {
+    color: #555;
+    font-size: 1.1rem;
+    line-height: 1.6;
 }
 
 /* Home Page Styles */
