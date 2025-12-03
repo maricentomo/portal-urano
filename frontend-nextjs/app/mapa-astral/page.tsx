@@ -86,26 +86,12 @@ export default function MapaAstralPage() {
             const initialMessage = `
 # INÍCIO DA CONSULTA ASTROLÓGICA
 
-Dados recebidos e mapa calculado com sucesso. Vamos iniciar a análise do seu mapa natal.
-
-## Tabela 1: Posições Planetárias
-
-| Ponto | Signo | Grau | Casa | Retrógrado |
-| --- | --- | --- | --- | --- |
-${Object.entries(data.planets).map(([planet, info]: [string, any]) =>
-                `| ${planet} | ${info.sign} | ${info.degree}° | ${info.house} | ${info.retrograde ? 'Sim' : 'Não'} |`
-            ).join('\n')}
-
-Vamos analisar seu mapa natal seguindo uma estrutura técnica e didática. A cada seção, farei uma pausa para verificar se a análise está fazendo sentido para você.
-
-Podemos começar com a Visão Geral do Mapa?
-            `;
 
             setMessages([{ role: 'assistant', content: initialMessage }]);
 
         } catch (error: any) {
             console.error('Erro:', error);
-            alert(`Erro: ${error.message}`);
+            alert(`Erro: ${ error.message }`);
         } finally {
             setIsLoading(false);
         }
@@ -142,7 +128,7 @@ Podemos começar com a Visão Geral do Mapa?
             console.error('Erro:', error);
             setMessages(prev => [
                 ...prev,
-                { role: 'assistant', content: `❌ Erro: ${error.message || 'Ocorreu um erro ao processar sua mensagem.'}` }
+                { role: 'assistant', content: `❌ Erro: ${ error.message || 'Ocorreu um erro ao processar sua mensagem.' } ` }
             ]);
         } finally {
             setIsLoading(false);
@@ -160,7 +146,7 @@ Podemos começar com a Visão Geral do Mapa?
             .replace(/\n/g, '<br>')
             .replace(/\| (.*?) \|/g, (match) => {
                 // Simple table formatting (very basic)
-                return `<div class="table-row">${match}</div>`;
+                return `< div class="table-row" > ${ match }</div > `;
             });
     };
 
@@ -257,9 +243,9 @@ Podemos começar com a Visão Geral do Mapa?
                     <>
                         <div className="chat-history">
                             {messages.map((msg, idx) => (
-                                <div key={idx} className={`message ${msg.role}`}>
+                                <div key={idx} className={`message ${ msg.role } `}>
                                     <div
-                                        className={`message-content ${msg.role === 'user' ? 'user-message' : 'ai-message'}`}
+                                        className={`message - content ${ msg.role === 'user' ? 'user-message' : 'ai-message' } `}
                                         dangerouslySetInnerHTML={{ __html: msg.role === 'assistant' ? formatMarkdown(msg.content) : msg.content }}
                                     />
                                 </div>
