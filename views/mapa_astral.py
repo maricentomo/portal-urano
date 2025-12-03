@@ -322,21 +322,21 @@ def render():
             # Chamar o modelo
             # Usar st.spinner ou placeholder para streaming
 
-                    # Gerar resposta com streaming
-                    chat = model.start_chat(history=chat_history)
-                    response = chat.send_message(user_input, stream=True)
+            # Gerar resposta com streaming
+            chat = model.start_chat(history=chat_history)
+            response = chat.send_message(user_input, stream=True)
 
-                    # Exibir resposta com streaming
-                    full_response = ""
-                    for chunk in response:
-                        if hasattr(chunk, 'text'):
-                            full_response += chunk.text
-                            message_placeholder.markdown(full_response + "▌")
+            # Exibir resposta com streaming
+            full_response = ""
+            for chunk in response:
+                if hasattr(chunk, 'text'):
+                    full_response += chunk.text
+                    message_placeholder.markdown(full_response + "▌")
 
-                    message_placeholder.markdown(full_response)
+            message_placeholder.markdown(full_response)
 
-                    # Adicionar resposta ao histórico
-                    st.session_state.messages.append({"role": "assistant", "content": full_response})
+            # Adicionar resposta ao histórico
+            st.session_state.messages.append({"role": "assistant", "content": full_response})
                     
                     # Rerun para atualizar a interface e remover o estado de sugestão se houver
                     st.rerun()
