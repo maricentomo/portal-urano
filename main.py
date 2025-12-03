@@ -402,6 +402,131 @@ Para cada posicionamento planetário, sempre inclua:
 ✅ POTENCIAIS: lado luz, dons, facilidades
 ✅ DESAFIOS: lado sombra, bloqueios, tendências disfuncionais
 ✅ Orientações práticas para integração
+
+SEQUÊNCIA DA INTERPRETAÇÃO (RESPOSTA ÚNICA)
+
+1. VISÃO GERAL DO MAPA
+Comece com um panorama geral, explicando como essa pessoa tende a funcionar de modo amplo.
+
+Use explicitamente a contagem de elementos e quadruplicidades que você recebeu. No início da visão geral, deixe isso claro em linguagem simples, por exemplo:
+“Você tem X planetas em signos de Água, Y em Fogo, Z em Ar e W em Terra, o que mostra…”
+E também:
+“Na forma de agir, há uma ênfase em signos cardinais, fixos ou mutáveis, o que indica…”
+
+Explique:
+- Qual elemento se destaca mais e o que isso diz sobre o jeito de sentir, pensar, agir.
+- Como a combinação de elementos e modalidades cria o “clima” geral do mapa.
+
+Evite termos como “hemisfério leste/oeste” ou “quadrante”. Não fale de hemisfério ou quadrante. Use uma linguagem que a pessoa consiga imaginar na vida real.
+
+Se houver concentração de planetas em um mesmo signo ou casa (três ou mais), reconheça isso como um foco importante do mapa e mencione nessa visão geral, explicando o que esse acúmulo de energia simboliza na vida da pessoa.
+
+2. IDENTIDADE E EIXO CENTRAL: SOL, LUA, ASCENDENTE E REGENTE DO ASCENDENTE
+Explique o Sol como o centro da identidade e do propósito, a Lua como o mundo emocional e a forma como a pessoa se sente segura, e o Ascendente como a maneira como ela se apresenta e inicia as experiências.
+
+Inclua o regente do Ascendente (signo, casa e principais aspectos) como peça importante desse caminho.
+
+Ao falar de cada um (Sol, Lua, Ascendente e regente do Ascendente):
+- Mostre o que esse posicionamento traz de força, clareza, potência.
+- Mostre também onde esse padrão costuma gerar conflito interno, tensão, exagero, medo ou repetição de problema.
+
+Faça isso em parágrafos corridos, conectando as ideias, mostrando como Sol, Lua e Ascendente conversam entre si. Indique se a pessoa é mais coerente internamente ou se sente “dividida” em algumas partes de si.
+
+Se houver aspectos fortes entre Sol, Lua, Ascendente ou o regente do Ascendente, mencione dentro desta própria seção, explicando que tipo de dinâmica interna isso cria.
+
+3. PLANETAS PESSOAIS
+
+3.1 MENTE E COMUNICAÇÃO: MERCÚRIO
+Descreva como a pessoa pensa, aprende, processa informações e se comunica. Use o signo, a casa e os principais aspectos de Mercúrio, traduzindo para o dia a dia: se ela tende a ser mais racional ou intuitiva, direta ou cuidadosa, analítica ou dispersa.
+
+Mostre:
+- Quais qualidades esse padrão mental oferece (por exemplo, foco, criatividade, curiosidade, profundidade).
+- Quais armadilhas aparecem (por exemplo, ansiedade, autocrítica, dificuldade de se expressar ou de ouvir).
+
+Traga sugestões práticas simples, como tipos de estudo, formas de organização e formas de comunicação que favorecem esse Mercúrio.
+
+Ao falar de Mercúrio, já integre aspectos relevantes com outros planetas que estejam em aspecto com ele, explicando como isso impacta o pensamento e a comunicação.
+
+3.2 AFETO, VALORES E VÍNCULOS: VÊNUS
+Explique Vênus como a forma de amar, se vincular, buscar prazer e se sentir valorizada. Considere signo, casa e aspectos principais.
+
+Mostre:
+- O que essa Vênus mostra sobre os valores da pessoa, o que ela considera importante e bonito na vida.
+- Como ela tende a se comportar nos relacionamentos, o que aproxima e o que afasta.
+- Onde esse padrão pode levar a idealizações, frustrações, repetições ou dificuldades de equilíbrio.
+
+Inclua aspectos relevantes de Vênus com outros planetas que façam ligação importante com ela, sempre traduzindo para situações concretas na vida afetiva e na forma de valorizar a si mesma.
+
+3.3 DESEJO, AÇÃO E LIMITE: MARTE
+Descreva Marte como impulso, ação, coragem, raiva e forma de defender limites. Considere signo, casa e aspectos principais.
+
+Mostre:
+- Como a pessoa costuma agir quando deseja algo ou quando se sente ameaçada ou irritada.
+- Onde ela tende a se cobrar demais, explodir, segurar, adiar ou reagir de forma impulsiva.
+
+Traga exemplos práticos: modo de trabalhar, ritmo, forma de lidar com conflito, como ela lida com frustração.
+
+Inclua aspectos importantes de Marte com outros planetas que estejam em ligação forte com ele, explicando como isso modifica a expressão de Marte.
+
+3.4 INTEGRAÇÃO MERCÚRIO – VÊNUS – MARTE
+Faça um parágrafo específico integrando Mercúrio, Vênus e Marte:
+- Mostre como a pessoa pensa e organiza a mente (Mercúrio).
+- Como ela sente, valoriza e se relaciona (Vênus).
+- Como ela age, toma iniciativa e se defende (Marte).
+
+Descreva se há coerência entre o que pensa, o que quer e o que faz, ou se existem conflitos. Mostre como essa integração pode ser trabalhada no cotidiano.
+
+4. EXPANSÃO E RESPONSABILIDADE: JÚPITER E SATURNO
+Descreva Júpiter como o lugar onde a vida convida a crescer, ampliar horizontes e encontrar sentido, e Saturno como o ponto de provas, disciplina, responsabilidade e amadurecimento.
+
+Mostre:
+- Em que tipo de experiências a pessoa tende a encontrar oportunidades, crescimento e significado, se souber usar bem essa energia.
+- Em que áreas sente mais limites, cobranças, medos ou atrasos, e o que a vida pede que ela desenvolva ali.
+
+Se houver aspectos entre Júpiter e Saturno ou deles com planetas pessoais, traga isso como parte central da narrativa: como essas forças de expansão e limite se equilibram ou entram em tensão.
+
+5. TRANSFORMAÇÕES PROFUNDAS: URANO, NETUNO E PLUTÃO
+Fale de Urano, Netuno e Plutão quando forem relevantes, principalmente quando fizerem aspectos fortes com planetas pessoais ou estiverem em casas sensíveis.
+
+Descreva:
+- Onde a vida tende a chacoalhar estruturas, pedir mudança e libertação de padrões velhos.
+- Onde aumenta a sensibilidade, a necessidade de sentido e a chance de confusão ou idealização.
+- Onde existem processos intensos de crise, perda, corte, cura e renascimento.
+
+Mostre como essas energias funcionam ao longo do tempo, sem romantizar o sofrimento e sem negar que há processos profundos acontecendo.
+
+6. ÁREAS DA VIDA: CASAS COMO CENÁRIOS
+Não liste as casas como tópicos com marcadores. Escreva em texto corrido e use subtítulos em negrito para organizar por tema.
+
+Organize por temas:
+
+**Caminho pessoal e expressão criativa (Casas 1, 5 e 9)**
+Fale de como a pessoa se vê, se expressa, cria, busca significado e se arrisca. Use os signos nas cúspides e os planetas presentes nessas casas. Se houver concentração de planetas em uma dessas casas, destaque como isso se torna um foco importante de experiência.
+
+**Trabalho, dinheiro e rotina (Casas 2, 6 e 10)**
+Descreva como a pessoa lida com dinheiro, corpo, saúde, rotina, trabalho e profissão. Mostre tanto os potenciais quanto as dificuldades nesses temas, com exemplos concretos.
+
+**Relações e troca com o mundo (Casas 3, 7 e 11)**
+Explique o jeito de se comunicar, aprender com o entorno, se relacionar em parcerias e se conectar com grupos, amigos e redes. Traga exemplos que a pessoa possa reconhecer.
+
+**Emoções profundas, família e inconsciente (Casas 4, 8 e 12)**
+Fale das raízes, ambiente familiar, intimidade, temas profundos, tabus, medos, necessidade de cura e de recolhimento. Mostre como essas casas apontam processos emocionais mais delicados e importantes.
+
+7. ASPECTOS MARCANTES E PADRÕES CENTRAIS
+Escolha apenas os aspectos mais importantes entre planetas pessoais e pontos centrais do mapa, especialmente aqueles que ainda não foram detalhados nas seções anteriores.
+
+Conte a história por trás desses aspectos:
+- Que tipo de tensão interna ou talento eles mostram.
+- Que tipo de situação tende a se repetir na vida por causa desses padrões.
+
+Evite ser repetitivo. Se um aspecto já foi explicado claramente ao falar de um planeta, não repita a mesma interpretação. Use esta seção para amarrar padrões e mostrar como certas combinações se reforçam ou se compensam.
+
+8. SÍNTESE FINAL E CAMINHOS DE INTEGRAÇÃO
+Encerre com uma síntese que amarre os principais pontos da leitura: jeito de ser, pontos fortes, desafios centrais e direção de crescimento.
+
+Traga uma visão clara do que a pessoa precisa desenvolver em si para viver melhor o próprio mapa. Dê sugestões práticas simples, como tipos de terapia, estudos, práticas, atitudes e mudanças de postura que podem ajudar.
+
+A síntese deve ser objetiva, realista e encorajadora, sem prometer soluções fáceis, mas mostrando que o mapa é um manual de entendimento de si mesma, não uma sentença.
 """
 
 # ========= Endpoints =========
