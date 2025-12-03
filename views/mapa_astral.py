@@ -326,7 +326,7 @@ def render():
 
                 try:
                     # Criar o modelo
-                    model = genai.GenerativeModel('gemini-2.5-flash')
+                    model = genai.GenerativeModel('gemini-1.5-flash')
 
                     # Corrigir os papéis para compatibilidade com o modelo Gemini
                     chat_history = []
