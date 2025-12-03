@@ -82,23 +82,8 @@ export default function MapaAstralPage() {
             setStep('chat');
             setStatusMessage('');
 
-            // Mensagem inicial do sistema (simulada)
-            // Mensagem inicial do sistema (simulada)
-            const initialMessage = `
-# INÍCIO DA CONSULTA ASTROLÓGICA
-
-Dados recebidos e mapa calculado com sucesso. Vamos iniciar a análise do seu mapa natal.
-
-## Tabela 1: Posições Planetárias
-
-| Ponto | Signo | Grau | Casa | Retrógrado |
-| --- | --- | --- | --- | --- |
-${data.positions.map((pos: any) =>
-                `| ${pos.planet} | ${pos.sign} | ${pos.degree}° | ${pos.house} | ${pos.retrograde ? 'Sim' : 'Não'} |`
-            ).join('\n')}
-
-Aguarde enquanto gero a análise completa do seu mapa...
-            `;
+            // Mensagem inicial do sistema
+            const initialMessage = `Aguarde enquanto calculo e analiso seu mapa astral completo...`;
 
             setMessages([{ role: 'assistant', content: initialMessage }]);
 
