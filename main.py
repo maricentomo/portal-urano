@@ -24,7 +24,7 @@ import auth
 from views.chart_svg import generate_chart_svg_from_birth_data, CustomChartColors
 
 # Configurar API key do Gemini
-GOOGLE_API_KEY = os.environ.get("GOOGLE_API_KEY") or "AIzaSyCYLid7hqKnsD_dPsz1gANvR_2vZA2gh_o"
+GOOGLE_API_KEY = os.environ.get("GOOGLE_API_KEY")
 if GOOGLE_API_KEY:
     genai.configure(api_key=GOOGLE_API_KEY)
 
