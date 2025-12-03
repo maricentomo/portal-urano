@@ -83,7 +83,6 @@ export default function MapaAstralPage() {
             setStatusMessage('');
 
             // Mensagem inicial do sistema (simulada)
-            // Mensagem inicial do sistema (simulada)
             const initialMessage = `
 # INÍCIO DA CONSULTA ASTROLÓGICA
 
