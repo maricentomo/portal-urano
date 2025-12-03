@@ -3,17 +3,38 @@
 import { useState, useRef, useEffect } from 'react';
 import Image from 'next/image';
 
-const API_URL = '/api/chat';
+const CHAT_API_URL = '/api/chat';
+const CALCULATE_API_URL = '/api/calculate';
 
 interface Message {
     role: 'user' | 'assistant';
     content: string;
 }
 
+interface BirthData {
+    name: string;
+    date: string;
+    time: string;
+    city: string;
+    country: string;
+}
+
 export default function MapaAstralPage() {
+    // Estados
+    const [step, setStep] = useState<'form' | 'chat'>('form');
+    const [birthData, setBirthData] = useState<BirthData>({
+        name: '',
+        date: '',
+        time: '',
+        city: '',
+        country: 'Brazil'
+    });
+    const [mapData, setMapData] = useState<any>(null);
     const [messages, setMessages] = useState<Message[]>([]);
     const [inputMessage, setInputMessage] = useState('');
     const [isLoading, setIsLoading] = useState(false);
+    const [statusMessage, setStatusMessage] = useState('');
+
     const messagesEndRef = useRef<HTMLDivElement>(null);
 
     const scrollToBottom = () => {
@@ -24,6 +45,73 @@ export default function MapaAstralPage() {
         scrollToBottom();
     }, [messages]);
 
+    // Manipulação do Formulário
+    const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+        const { name, value } = e.target;
+        setBirthData(prev => ({ ...prev, [name]: value }));
+    };
+
+    const handleCalculate = async (e: React.FormEvent) => {
+        e.preventDefault();
+        if (!birthData.name || !birthData.date || !birthData.time || !birthData.city) {
+            alert('Por favor, preencha todos os campos obrigatórios.');
+            return;
+        }
+
+        setIsLoading(true);
+        setStatusMessage('Consultando os astros...');
+
+        try {
+            // 1. Calcular Mapa
+            setStatusMessage('📐 Calculando posições matemáticas...');
+            const response = await fetch(CALCULATE_API_URL, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(birthData)
+            });
+
+            if (!response.ok) {
+                const errorData = await response.json().catch(() => ({}));
+                throw new Error(errorData.detail || 'Erro ao calcular o mapa');
+            }
+
+            const data = await response.json();
+            setMapData(data);
+
+            // 2. Iniciar Chat
+            setStep('chat');
+            setStatusMessage('');
+
+            // Mensagem inicial do sistema (simulada)
+            const initialMessage = `
+# INÍCIO DA CONSULTA ASTROLÓGICA
+
+Dados recebidos e mapa calculado com sucesso. Vamos iniciar a análise do seu mapa natal.
+
+## Tabela 1: Posições Planetárias
+
+| Ponto | Signo | Grau | Casa | Retrógrado |
+| --- | --- | --- | --- | --- |
+${Object.entries(data.planets).map(([planet, info]: [string, any]) =>
+                `| ${planet} | ${info.sign} | ${info.degree}° | ${info.house} | ${info.retrograde ? 'Sim' : 'Não'} |`
+            ).join('\n')}
+
+Vamos analisar seu mapa natal seguindo uma estrutura técnica e didática. A cada seção, farei uma pausa para verificar se a análise está fazendo sentido para você.
+
+Podemos começar com a Visão Geral do Mapa?
+            `;
+
+            setMessages([{ role: 'assistant', content: initialMessage }]);
+
+        } catch (error: any) {
+            console.error('Erro:', error);
+            alert(`Erro: ${error.message}`);
+        } finally {
+            setIsLoading(false);
+        }
+    };
+
+    // Manipulação do Chat
     const sendMessage = async () => {
         if (!inputMessage.trim() || isLoading) return;
 
@@ -33,12 +121,13 @@ export default function MapaAstralPage() {
         setIsLoading(true);
 
         try {
-            const response = await fetch(API_URL, {
+            const response = await fetch(CHAT_API_URL, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({
                     message: inputMessage,
-                    history: messages
+                    history: messages,
+                    map_data: mapData // Enviando dados do mapa!
                 })
             });
 
@@ -68,7 +157,11 @@ export default function MapaAstralPage() {
             .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
             .replace(/\*(.*?)\*/g, '<em>$1</em>')
             .replace(/\n\n/g, '</p><p>')
-            .replace(/\n/g, '<br>');
+            .replace(/\n/g, '<br>')
+            .replace(/\| (.*?) \|/g, (match) => {
+                // Simple table formatting (very basic)
+                return `<div class="table-row">${match}</div>`;
+            });
     };
 
     return (
@@ -79,58 +172,136 @@ export default function MapaAstralPage() {
             </div>
 
             <div className="chat-center">
-                <div className="chat-history">
-                    {messages.length === 0 ? (
-                        <div className="welcome-message">
-                            <h1>☉ Mapa Astral</h1>
-                            <p>Converse comigo sobre interpretação de mapas astrais, posições planetárias e influências cósmicas.</p>
-                        </div>
-                    ) : (
-                        messages.map((msg, idx) => (
-                            <div key={idx} className={`message ${msg.role}`}>
-                                <div
-                                    className={`message-content ${msg.role === 'user' ? 'user-message' : 'ai-message'}`}
-                                    dangerouslySetInnerHTML={{ __html: msg.role === 'assistant' ? formatMarkdown(msg.content) : msg.content }}
+                {step === 'form' ? (
+                    <div className="form-container" style={{ maxWidth: '600px', margin: '40px auto', padding: '20px', backgroundColor: '#1a1a1a', borderRadius: '15px', color: 'white' }}>
+                        <h2 style={{ textAlign: 'center', color: '#9a64ce', marginBottom: '30px' }}>Inicie sua Jornada Cósmica</h2>
+                        <form onSubmit={handleCalculate} style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
+                            <div>
+                                <label style={{ display: 'block', marginBottom: '8px' }}>Nome Completo</label>
+                                <input
+                                    type="text"
+                                    name="name"
+                                    value={birthData.name}
+                                    onChange={handleInputChange}
+                                    className="chat-input"
+                                    style={{ width: '100%' }}
+                                    required
                                 />
                             </div>
-                        ))
-                    )}
-                    {isLoading && (
-                        <div className="message assistant typing-indicator">
-                            <div className="message-content ai-message">
-                                <div className="typing-dots">
-                                    <span></span>
-                                    <span></span>
-                                    <span></span>
+                            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '20px' }}>
+                                <div>
+                                    <label style={{ display: 'block', marginBottom: '8px' }}>Data (DD/MM/AAAA)</label>
+                                    <input
+                                        type="text"
+                                        name="date"
+                                        placeholder="Ex: 29/10/1981"
+                                        value={birthData.date}
+                                        onChange={handleInputChange}
+                                        className="chat-input"
+                                        style={{ width: '100%' }}
+                                        required
+                                    />
+                                </div>
+                                <div>
+                                    <label style={{ display: 'block', marginBottom: '8px' }}>Hora (HH:MM)</label>
+                                    <input
+                                        type="text"
+                                        name="time"
+                                        placeholder="Ex: 05:45"
+                                        value={birthData.time}
+                                        onChange={handleInputChange}
+                                        className="chat-input"
+                                        style={{ width: '100%' }}
+                                        required
+                                    />
                                 </div>
                             </div>
-                        </div>
-                    )}
-                    <div ref={messagesEndRef} />
-                </div>
+                            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '20px' }}>
+                                <div>
+                                    <label style={{ display: 'block', marginBottom: '8px' }}>Cidade</label>
+                                    <input
+                                        type="text"
+                                        name="city"
+                                        value={birthData.city}
+                                        onChange={handleInputChange}
+                                        className="chat-input"
+                                        style={{ width: '100%' }}
+                                        required
+                                    />
+                                </div>
+                                <div>
+                                    <label style={{ display: 'block', marginBottom: '8px' }}>País</label>
+                                    <input
+                                        type="text"
+                                        name="country"
+                                        value={birthData.country}
+                                        onChange={handleInputChange}
+                                        className="chat-input"
+                                        style={{ width: '100%' }}
+                                        required
+                                    />
+                                </div>
+                            </div>
 
-                <div className="chat-input-wrapper">
-                    <div className="chat-input-container">
-                        <input
-                            type="text"
-                            className="chat-input"
-                            placeholder="Faça sua pergunta sobre Mapa Astral..."
-                            value={inputMessage}
-                            onChange={(e) => setInputMessage(e.target.value)}
-                            onKeyPress={(e) => e.key === 'Enter' && !e.shiftKey && sendMessage()}
-                            disabled={isLoading}
-                        />
-                        <button
-                            className="chat-send-btn"
-                            onClick={sendMessage}
-                            disabled={isLoading}
-                        >
-                            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                                <path d="M22 2L11 13M22 2l-7 20-4-9-9-4 20-7z" />
-                            </svg>
-                        </button>
+                            <button
+                                type="submit"
+                                className="chat-send-btn"
+                                style={{ width: '100%', marginTop: '20px', padding: '15px', borderRadius: '8px', justifyContent: 'center' }}
+                                disabled={isLoading}
+                            >
+                                {isLoading ? statusMessage : '✨ Iniciar Consulta'}
+                            </button>
+                        </form>
                     </div>
-                </div>
+                ) : (
+                    <>
+                        <div className="chat-history">
+                            {messages.map((msg, idx) => (
+                                <div key={idx} className={`message ${msg.role}`}>
+                                    <div
+                                        className={`message-content ${msg.role === 'user' ? 'user-message' : 'ai-message'}`}
+                                        dangerouslySetInnerHTML={{ __html: msg.role === 'assistant' ? formatMarkdown(msg.content) : msg.content }}
+                                    />
+                                </div>
+                            ))}
+                            {isLoading && (
+                                <div className="message assistant typing-indicator">
+                                    <div className="message-content ai-message">
+                                        <div className="typing-dots">
+                                            <span></span>
+                                            <span></span>
+                                            <span></span>
+                                        </div>
+                                    </div>
+                                </div>
+                            )}
+                            <div ref={messagesEndRef} />
+                        </div>
+
+                        <div className="chat-input-wrapper">
+                            <div className="chat-input-container">
+                                <input
+                                    type="text"
+                                    className="chat-input"
+                                    placeholder="Faça sua pergunta sobre Mapa Astral..."
+                                    value={inputMessage}
+                                    onChange={(e) => setInputMessage(e.target.value)}
+                                    onKeyPress={(e) => e.key === 'Enter' && !e.shiftKey && sendMessage()}
+                                    disabled={isLoading}
+                                />
+                                <button
+                                    className="chat-send-btn"
+                                    onClick={sendMessage}
+                                    disabled={isLoading}
+                                >
+                                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                                        <path d="M22 2L11 13M22 2l-7 20-4-9-9-4 20-7z" />
+                                    </svg>
+                                </button>
+                            </div>
+                        </div>
+                    </>
+                )}
             </div>
         </div>
     );
