@@ -3,8 +3,12 @@
 import { useState, useRef, useEffect } from 'react';
 import Image from 'next/image';
 
-const CHAT_API_URL = '/api/chat';
-const CALCULATE_API_URL = '/api/calculate';
+const API_BASE_URL = process.env.NODE_ENV === 'development'
+    ? 'http://localhost:8000'
+    : 'https://api-mapa-astral-production.up.railway.app';
+
+const CHAT_API_URL = `${API_BASE_URL}/chat`;
+const CALCULATE_API_URL = `${API_BASE_URL}/calculate`;
 
 interface Message {
     role: 'user' | 'assistant';
