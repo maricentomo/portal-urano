@@ -298,48 +298,48 @@ def render():
             #    st.markdown(user_input)
 
             # Preparar o contexto para o modelo
+            try:
+                # Criar histórico de conversa para o modelo
+                mensagens = []
+                mensagens.append({"role": "system", "content": INSTRUCOES_SISTEMA})
 
-            # Criar histórico de conversa para o modelo
-            mensagens = []
-            mensagens.append({"role": "system", "content": INSTRUCOES_SISTEMA})
+                # Adicionar contexto dos dados do mapa
+                contexto = f"""
+                Aqui estão os DADOS TÉCNICOS do mapa natal:
+                {json.dumps(st.session_state.dados_mapa, ensure_ascii=False)}
 
-            # Adicionar contexto dos dados do mapa
-            contexto = f"""
-            Aqui estão os DADOS TÉCNICOS do mapa natal:
-            {json.dumps(st.session_state.dados_mapa, ensure_ascii=False)}
+                Use títulos em formato Markdown (# para títulos principais, ## para subtítulos) para cada seção da análise.
+                Destaque claramente as seções LUZ e SOMBRA em cada análise.
+                Mantenha um tom técnico e didático, evitando linguagem informal ou excessivamente emocional.
+                """
 
-            Use títulos em formato Markdown (# para títulos principais, ## para subtítulos) para cada seção da análise.
-            Destaque claramente as seções LUZ e SOMBRA em cada análise.
-            Mantenha um tom técnico e didático, evitando linguagem informal ou excessivamente emocional.
-            """
+                mensagens.append({"role": "system", "content": contexto})
 
-            mensagens.append({"role": "system", "content": contexto})
+                # Adicionar histórico de conversa (últimas 10 mensagens)
+                for msg in st.session_state.messages[-10:]:
+                    mensagens.append({"role": msg["role"], "content": msg["content"]})
 
-            # Adicionar histórico de conversa (últimas 10 mensagens)
-            for msg in st.session_state.messages[-10:]:
-                mensagens.append({"role": msg["role"], "content": msg["content"]})
+                # Chamar o modelo
+                # Usar st.spinner ou placeholder para streaming
 
-            # Chamar o modelo
-            # Usar st.spinner ou placeholder para streaming
+                # Gerar resposta com streaming
+                chat = model.start_chat(history=chat_history)
+                response = chat.send_message(user_input, stream=True)
 
-            # Gerar resposta com streaming
-            chat = model.start_chat(history=chat_history)
-            response = chat.send_message(user_input, stream=True)
+                # Exibir resposta com streaming
+                full_response = ""
+                for chunk in response:
+                    if hasattr(chunk, 'text'):
+                        full_response += chunk.text
+                        message_placeholder.markdown(full_response + "▌")
 
-            # Exibir resposta com streaming
-            full_response = ""
-            for chunk in response:
-                if hasattr(chunk, 'text'):
-                    full_response += chunk.text
-                    message_placeholder.markdown(full_response + "▌")
+                message_placeholder.markdown(full_response)
 
-            message_placeholder.markdown(full_response)
-
-            # Adicionar resposta ao histórico
-            st.session_state.messages.append({"role": "assistant", "content": full_response})
-                    
-            # Rerun para atualizar a interface e remover o estado de sugestão se houver
-            st.rerun()
+                # Adicionar resposta ao histórico
+                st.session_state.messages.append({"role": "assistant", "content": full_response})
+                        
+                # Rerun para atualizar a interface e remover o estado de sugestão se houver
+                st.rerun()
 
         except Exception as e:
             st.error(f"Erro ao gerar resposta: {e}")
