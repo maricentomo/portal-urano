@@ -11,6 +11,11 @@ from timezonefinder import TimezoneFinder
 import pytz
 import json
 import os
+from dotenv import load_dotenv  # 👈 NOVO
+from pathlib import Path
+
+# Carregar variáveis do .env
+load_dotenv()  # 👈 NOVO
 
 # Importar Google Gemini para IA
 import google.generativeai as genai
@@ -21,7 +26,7 @@ import models
 import auth
 
 # Importar módulo de geração de SVG
-from views.chart_svg import generate_chart_svg_from_birth_data, CustomChartColors
+from views.chart_svg import generate_chart_svg, CustomChartColors
 
 # Configurar API key do Gemini
 GOOGLE_API_KEY = os.environ.get("GOOGLE_API_KEY")
@@ -33,10 +38,49 @@ app = FastAPI(
     description="API com Quíron, Lilith, Nodos, retrogradação, casas com orbe, aspectos, elementos, quadruplicidades e Chat IA.",
     version="11.0",
     servers=[
-        {"url": "https://api-mapa-astral-production.up.railway.app", "description": "Servidor de Produção"},
-        {"url": "http://localhost:8000", "description": "Servidor Local"}
-    ]
+        {"url": "http://127.0.0.1:8000", "description": "Servidor Local"},
+        {
+            "url": "https://api-mapa-astral-production.up.railway.app",
+            "description": "Servidor de Produção",
+        },
+    ],
 )
+
+import os
+import stripe
+from fastapi import Request, HTTPException
+
+stripe.api_key = os.getenv("STRIPE_SECRET_KEY")
+STRIPE_WEBHOOK_SECRET = os.getenv("STRIPE_WEBHOOK_SECRET")
+
+
+@app.post("/stripe/webhook")
+async def stripe_webhook(request: Request):
+    payload = await request.body()
+    sig_header = request.headers.get("stripe-signature")
+
+    if not STRIPE_WEBHOOK_SECRET:
+        raise HTTPException(status_code=500, detail="STRIPE_WEBHOOK_SECRET não configurado")
+    if not sig_header:
+        raise HTTPException(status_code=400, detail="Header stripe-signature ausente")
+
+    try:
+        event = stripe.Webhook.construct_event(
+            payload=payload,
+            sig_header=sig_header,
+            secret=STRIPE_WEBHOOK_SECRET,
+        )
+    except ValueError:
+        raise HTTPException(status_code=400, detail="Payload inválido")
+    except stripe.error.SignatureVerificationError:
+        raise HTTPException(status_code=400, detail="Assinatura inválida")
+
+    if event.get("type") == "checkout.session.completed":
+        session = event["data"]["object"]
+        print("✅ checkout.session.completed:", session.get("id"), session.get("payment_status"))
+
+    return {"ok": True}
+
 
 # Configurar CORS para permitir requisições do frontend
 app.add_middleware(
@@ -51,12 +95,12 @@ app.add_middleware(
 Base.metadata.create_all(bind=engine)
 
 # ========= Modelos de Dados =========
-
 class BirthData(BaseModel):
-    date: str      # Formato DD/MM/AAAA ou YYYY-MM-DD
-    time: str      # Formato HH:MM
+    date: str  # Formato DD/MM/AAAA ou YYYY-MM-DD
+    time: str  # Formato HH:MM
     city: str
     country: str
+
 
 class PlanetPosition(BaseModel):
     planet: str
@@ -65,10 +109,12 @@ class PlanetPosition(BaseModel):
     house: int
     retrograde: bool = False
 
+
 class HouseInfo(BaseModel):
     house: int
     sign: str
     degree: float
+
 
 class Aspect(BaseModel):
     planet1: str
@@ -85,36 +131,63 @@ class MapResult(BaseModel):
     elements: Dict[str, int]
     quadruplicities: Dict[str, int]  # <-- ADICIONAMOS AQUI
 
+
 class ReportRequest(BaseModel):
     name: str
-    date: str      # Formato DD/MM/AAAA ou YYYY-MM-DD
-    time: str      # Formato HH:MM
+    date: str  # Formato DD/MM/AAAA ou YYYY-MM-DD
+    time: str  # Formato HH:MM
     city: str
     country: str
     question: Optional[str] = None  # Pergunta opcional do usuário
 
-# ========= Configurações de Signos, Elementos e Quadruplicidades =========
 
+# ========= Configurações de Signos, Elementos e Quadruplicidades =========
 zodiac_signs = [
-    "Áries", "Touro", "Gêmeos", "Câncer", "Leão", "Virgem",
-    "Libra", "Escorpião", "Sagitário", "Capricórnio", "Aquário", "Peixes"
+    "Áries",
+    "Touro",
+    "Gêmeos",
+    "Câncer",
+    "Leão",
+    "Virgem",
+    "Libra",
+    "Escorpião",
+    "Sagitário",
+    "Capricórnio",
+    "Aquário",
+    "Peixes",
 ]
 
 element_map = {
-    "Áries": "Fogo", "Leão": "Fogo", "Sagitário": "Fogo",
-    "Touro": "Terra", "Virgem": "Terra", "Capricórnio": "Terra",
-    "Gêmeos": "Ar", "Libra": "Ar", "Aquário": "Ar",
-    "Câncer": "Água", "Escorpião": "Água", "Peixes": "Água"
+    "Áries": "Fogo",
+    "Leão": "Fogo",
+    "Sagitário": "Fogo",
+    "Touro": "Terra",
+    "Virgem": "Terra",
+    "Capricórnio": "Terra",
+    "Gêmeos": "Ar",
+    "Libra": "Ar",
+    "Aquário": "Ar",
+    "Câncer": "Água",
+    "Escorpião": "Água",
+    "Peixes": "Água",
 }
 
 quad_map = {
-    "Áries": "Cardinal", "Câncer": "Cardinal", "Libra": "Cardinal", "Capricórnio": "Cardinal",
-    "Touro": "Fixo",     "Leão": "Fixo",      "Escorpião": "Fixo",    "Aquário": "Fixo",
-    "Gêmeos": "Mutável", "Virgem": "Mutável", "Sagitário": "Mutável", "Peixes": "Mutável"
+    "Áries": "Cardinal",
+    "Câncer": "Cardinal",
+    "Libra": "Cardinal",
+    "Capricórnio": "Cardinal",
+    "Touro": "Fixo",
+    "Leão": "Fixo",
+    "Escorpião": "Fixo",
+    "Aquário": "Fixo",
+    "Gêmeos": "Mutável",
+    "Virgem": "Mutável",
+    "Sagitário": "Mutável",
+    "Peixes": "Mutável",
 }
 
 # ========= Corpos Principais (Quíron, Lilith, Nodos etc.) =========
-
 PLANETS_SWEPH = {
     "Sol": swe.SUN,
     "Lua": swe.MOON,
@@ -128,12 +201,22 @@ PLANETS_SWEPH = {
     "Plutão": swe.PLUTO,
     "Quíron": swe.CHIRON,
     "Lilith": swe.MEAN_APOG,
-    "NóduloNorte": swe.TRUE_NODE
-    # NóduloSul = +180° do NóduloNorte manualmente
+    "NóduloNorte": swe.TRUE_NODE,  # NóduloSul = +180° do NóduloNorte manualmente
 }
 
-# ========= Geocodificação e Fuso Horário =========
+# ========= Carregar instruções do sistema (system_prompt.txt) =========
+def load_system_prompt() -> str:
+    base_dir = Path(__file__).resolve().parent
+    prompt_path = base_dir / "system_prompt.txt"
+    try:
+        return prompt_path.read_text(encoding="utf-8")
+    except Exception as e:
+        raise RuntimeError(f"Não consegui ler {prompt_path}: {e}")
 
+
+INSTRUCOES_SISTEMA = load_system_prompt()
+
+# ========= Geocodificação e Fuso Horário =========
 def get_coordinates(city: str, country: str):
     url = "https://nominatim.openstreetmap.org/search"
     params = {"city": city, "country": country, "format": "json"}
@@ -145,13 +228,17 @@ def get_coordinates(city: str, country: str):
     else:
         raise HTTPException(status_code=404, detail="Localização não encontrada")
 
+
 def get_timezone(latitude: float, longitude: float):
     tf = TimezoneFinder()
     timezone_str = tf.timezone_at(lat=latitude, lng=longitude)
     if timezone_str:
         return timezone_str
     else:
-        raise HTTPException(status_code=500, detail="Não foi possível determinar o fuso horário.")
+        raise HTTPException(
+            status_code=500, detail="Não foi possível determinar o fuso horário."
+        )
+
 
 def convert_to_ut(date_str: str, time_str: str, timezone_str: str):
     try:
@@ -161,18 +248,20 @@ def convert_to_ut(date_str: str, time_str: str, timezone_str: str):
             local_time = datetime.strptime(f"{date_str} {time_str}", "%d/%m/%Y %H:%M")
         except ValueError:
             local_time = datetime.strptime(f"{date_str} {time_str}", "%Y-%m-%d %H:%M")
+
         local_time = local_tz.localize(local_time)
         ut_time = local_time.astimezone(pytz.utc)
         return ut_time
     except Exception as e:
         raise HTTPException(status_code=400, detail=f"Erro ao converter horário: {e}")
 
-# ========= Funções para Casas, Orbe de Transição e Aspectos =========
 
+# ========= Funções para Casas, Orbe de Transição e Aspectos =========
 def find_house_with_orb(planet_long: float, houses: List[float]) -> int:
     for i in range(12):
         cusp_start = houses[i]
         cusp_end = houses[(i + 1) % 12]
+
         if cusp_start <= cusp_end:
             if cusp_start <= planet_long < cusp_end:
                 nominal_house = i + 1
@@ -186,7 +275,9 @@ def find_house_with_orb(planet_long: float, houses: List[float]) -> int:
             if planet_long >= cusp_start or planet_long < cusp_end:
                 nominal_house = i + 1
                 if planet_long >= cusp_start:
-                    dist_next = (cusp_end + 360) - planet_long if cusp_end < planet_long else 0
+                    dist_next = (
+                        (cusp_end + 360) - planet_long if cusp_end < planet_long else 0
+                    )
                 else:
                     dist_next = cusp_end - planet_long
                 next_house_id = ((i + 1) % 12) + 1
@@ -195,6 +286,7 @@ def find_house_with_orb(planet_long: float, houses: List[float]) -> int:
                     return next_house_id
                 return nominal_house
     return 1
+
 
 def find_house_nominal(planet_long: float, houses: List[float]) -> int:
     for i in range(12):
@@ -208,21 +300,24 @@ def find_house_nominal(planet_long: float, houses: List[float]) -> int:
                 return i + 1
     return 1
 
+
 def calculate_aspects(positions: List[PlanetPosition]) -> List[Aspect]:
     aspect_defs = [
         ("Conjunção", 0, 8),
         ("Oposição", 180, 8),
         ("Quadratura", 90, 8),
         ("Trígono", 120, 8),
-        ("Sextil", 60, 6)
+        ("Sextil", 60, 6),
     ]
+
     def to_360(p: PlanetPosition) -> float:
         sign_idx = zodiac_signs.index(p.sign)
-        return sign_idx*30 + p.degree
-    aspects = []
+        return sign_idx * 30 + p.degree
+
+    aspects: List[Aspect] = []
     n = len(positions)
     for i in range(n):
-        for j in range(i+1, n):
+        for j in range(i + 1, n):
             p1 = positions[i]
             p2 = positions[j]
             deg1 = to_360(p1)
@@ -231,18 +326,22 @@ def calculate_aspects(positions: List[PlanetPosition]) -> List[Aspect]:
             diff = min(diff, 360 - diff)
             for asp_name, asp_angle, orb in aspect_defs:
                 if abs(diff - asp_angle) <= orb:
-                    aspects.append(Aspect(
-                        planet1=p1.planet,
-                        planet2=p2.planet,
-                        aspect_type=asp_name,
-                        angle=round(diff, 2),
-                        orb=round(abs(diff - asp_angle), 2)
-                    ))
+                    aspects.append(
+                        Aspect(
+                            planet1=p1.planet,
+                            planet2=p2.planet,
+                            aspect_type=asp_name,
+                            angle=round(diff, 2),
+                            orb=round(abs(diff - asp_angle), 2),
+                        )
+                    )
     return aspects
+
 
 def calculate_elements(positions: List[PlanetPosition]) -> Dict[str, int]:
     counts = {"Fogo": 0, "Terra": 0, "Ar": 0, "Água": 0}
     dois_pontos = {"Sol", "Lua", "Ascendente", "MeioCéu"}
+
     for p in positions:
         if p.planet in ["Quíron", "Lilith", "NóduloNorte", "NóduloSul"]:
             continue
@@ -251,9 +350,11 @@ def calculate_elements(positions: List[PlanetPosition]) -> Dict[str, int]:
         counts[elem] += peso
     return counts
 
+
 def calculate_quadruplicities(positions: List[PlanetPosition]) -> Dict[str, int]:
     counts = {"Cardinal": 0, "Fixo": 0, "Mutável": 0}
     dois_pontos = {"Sol", "Lua", "Ascendente", "MeioCéu"}
+
     for p in positions:
         if p.planet in ["Quíron", "Lilith", "NóduloNorte", "NóduloSul"]:
             continue
@@ -262,115 +363,143 @@ def calculate_quadruplicities(positions: List[PlanetPosition]) -> Dict[str, int]
         counts[quad_type] += peso
     return counts
 
-# ========= Função Principal que Calcula Mapa =========
 
+# ========= Função Principal que Calcula Mapa =========
 def calculate_map(birth_data: BirthData) -> MapResult:
     # 1) Geocodificação e Fuso
     lat, lon = get_coordinates(birth_data.city, birth_data.country)
     tz_str = get_timezone(lat, lon)
+
     # 2) Converter data/hora local p/ UT
     dt_ut = convert_to_ut(birth_data.date, birth_data.time, tz_str)
     day, month, year = dt_ut.day, dt_ut.month, dt_ut.year
-    ut_hour = dt_ut.hour + dt_ut.minute/60.0
+    ut_hour = dt_ut.hour + dt_ut.minute / 60.0
+
     # 3) JD
     jd = swe.julday(year, month, day, ut_hour)
     swe.set_ephe_path("./ephemeris")
+
     # 4) Casas (Placidus) e asc_mc
-    houses, asc_mc = swe.houses(jd, lat, lon, b'P')
+    houses, asc_mc = swe.houses(jd, lat, lon, b"P")
+
     # Montar infos de casas
-    house_list = []
+    house_list: List[HouseInfo] = []
     for i, cusp in enumerate(houses, start=1):
         sign_idx = int(cusp // 30)
         sign = zodiac_signs[sign_idx]
         deg = cusp % 30
-        house_list.append(HouseInfo(
-            house=i,
-            sign=sign,
-            degree=round(deg, 2)
-        ))
+        house_list.append(
+            HouseInfo(
+                house=i,
+                sign=sign,
+                degree=round(deg, 2),
+            )
+        )
+
     # 5) Calcular posições
-    positions = []
+    positions: List[PlanetPosition] = []
     for planet_name, code in PLANETS_SWEPH.items():
         pos, ret = swe.calc(jd, code)
         if ret < 0:
-            raise HTTPException(status_code=500, detail=f"Erro ao calcular {planet_name}")
+            raise HTTPException(
+                status_code=500, detail=f"Erro ao calcular {planet_name}"
+            )
         longitude = pos[0]
         speed_long = pos[3]
-        is_retro = (speed_long < 0)
+        is_retro = speed_long < 0
+
         if planet_name == "NóduloNorte":
             planet_house = find_house_nominal(longitude, houses)
         else:
             planet_house = find_house_with_orb(longitude, houses)
+
         sign_idx = int(longitude // 30)
         sign = zodiac_signs[sign_idx]
         deg = longitude % 30
-        positions.append(PlanetPosition(
-            planet=planet_name,
-            sign=sign,
-            degree=round(deg, 2),
-            house=planet_house,
-            retrograde=is_retro
-        ))
+
+        positions.append(
+            PlanetPosition(
+                planet=planet_name,
+                sign=sign,
+                degree=round(deg, 2),
+                house=planet_house,
+                retrograde=is_retro,
+            )
+        )
+
     # NóduloSul = NóduloNorte + 180°
     nodo_norte = next((p for p in positions if p.planet == "NóduloNorte"), None)
     if nodo_norte:
-        nn_deg = zodiac_signs.index(nodo_norte.sign)*30 + nodo_norte.degree
+        nn_deg = zodiac_signs.index(nodo_norte.sign) * 30 + nodo_norte.degree
         south_deg = (nn_deg + 180) % 360
         south_sign_idx = int(south_deg // 30)
         south_sign = zodiac_signs[south_sign_idx]
         south_deg_in_sign = south_deg % 30
         nodo_sul_house = find_house_nominal(south_deg, houses)
-        positions.append(PlanetPosition(
-            planet="NóduloSul",
-            sign=south_sign,
-            degree=round(south_deg_in_sign, 2),
-            house=nodo_sul_house,
-            retrograde=False
-        ))
+        positions.append(
+            PlanetPosition(
+                planet="NóduloSul",
+                sign=south_sign,
+                degree=round(south_deg_in_sign, 2),
+                house=nodo_sul_house,
+                retrograde=False,
+            )
+        )
+
     # Ascendente
     asc_long = asc_mc[0]
     asc_sign_idx = int(asc_long // 30)
     asc_sign = zodiac_signs[asc_sign_idx]
     asc_deg = asc_long % 30
-    positions.append(PlanetPosition(
-        planet="Ascendente",
-        sign=asc_sign,
-        degree=round(asc_deg, 2),
-        house=1,
-        retrograde=False
-    ))
+    positions.append(
+        PlanetPosition(
+            planet="Ascendente",
+            sign=asc_sign,
+            degree=round(asc_deg, 2),
+            house=1,
+            retrograde=False,
+        )
+    )
+
     # MeioCéu
     mc_long = asc_mc[1]
     mc_sign_idx = int(mc_long // 30)
     mc_sign = zodiac_signs[mc_sign_idx]
     mc_deg = mc_long % 30
-    positions.append(PlanetPosition(
-        planet="MeioCéu",
-        sign=mc_sign,
-        degree=round(mc_deg, 2),
-        house=10,
-        retrograde=False
-    ))
+    positions.append(
+        PlanetPosition(
+            planet="MeioCéu",
+            sign=mc_sign,
+            degree=round(mc_deg, 2),
+            house=10,
+            retrograde=False,
+        )
+    )
+
     # 6) Calcular aspectos
     aspects_list = calculate_aspects(positions)
+
     # 7) Elementos
     elements_count = calculate_elements(positions)
+
     # 8) Quadruplicidades
     quads_count = calculate_quadruplicities(positions)
+
     # Retorno final
     return MapResult(
         positions=positions,
         houses=house_list,
         aspects=aspects_list,
         elements=elements_count,
-        quadruplicities=quads_count
+        quadruplicities=quads_count,
     )
 
-# ========= Modelos Adicionais para Chat/IA =========
 
+# ========= Modelos Adicionais para Chat/IA =========
 class ChatMessage(BaseModel):
     role: str  # "user" ou "assistant"
     content: str
+
 
 class ChatRequest(BaseModel):
     message: str
@@ -378,165 +507,17 @@ class ChatRequest(BaseModel):
     map_data: Optional[Dict] = None
     history: Optional[List[ChatMessage]] = []
 
+
 class ChatResponse(BaseModel):
-    response: str
-    
-# ========= Instruções do Sistema para IA =========
+    response: str  # texto gerado pela IA
 
-INSTRUCOES_SISTEMA = """
-IDENTIDADE E OBJETIVO
-Você é o Astro IA, um GPT especializado em análise astrológica profunda e técnica. Seu objetivo é interpretar mapas natais com precisão psicológica, revelando padrões energéticos, potenciais e desafios evolutivos. Sua abordagem é direta, profunda e analítica, evitando sentimentalismos excessivos ou linguagem piegas.
-
-DIRETRIZES DE RESPOSTA
-- Respostas longas e detalhadas, ricas em informações práticas
-- Linguagem técnica porém acessível: Use terminologia astrológica correta (ex: trígono, quadratura, regente) mas explique o significado.
-- Contextualize cada elemento dentro da totalidade do mapa
-- Profundidade psicológica: Analise motivações inconscientes, padrões comportamentais e dinâmicas internas
-
-ESTRUTURA DA ANÁLISE
-Use títulos destacados em cada seção e mantenha um tom didático e acolhedor, evitando informalidades excessivas.
-
-Para cada posicionamento planetário, sempre inclua:
-✅ Contexto dentro do mapa como um todo
-✅ Aspectos relevantes (conjunções, quadraturas, trígonos, sextis, oposições)
-✅ POTENCIAIS: lado luz, dons, facilidades
-✅ DESAFIOS: lado sombra, bloqueios, tendências disfuncionais
-✅ Orientações práticas para integração
-
-SEQUÊNCIA DA INTERPRETAÇÃO (RESPOSTA ÚNICA)
-
-1. VISÃO GERAL DO MAPA
-Comece com um panorama geral, explicando como essa pessoa tende a funcionar de modo amplo.
-
-Use explicitamente a contagem de elementos e quadruplicidades que você recebeu. No início da visão geral, deixe isso claro em linguagem simples, por exemplo:
-“Você tem X planetas em signos de Água, Y em Fogo, Z em Ar e W em Terra, o que mostra…”
-E também:
-“Na forma de agir, há uma ênfase em signos cardinais, fixos ou mutáveis, o que indica…”
-
-Explique:
-- Qual elemento se destaca mais e o que isso diz sobre o jeito de sentir, pensar, agir.
-- Como a combinação de elementos e modalidades cria o “clima” geral do mapa.
-
-Evite termos como “hemisfério leste/oeste” ou “quadrante”. Não fale de hemisfério ou quadrante. Use uma linguagem que a pessoa consiga imaginar na vida real.
-
-Se houver concentração de planetas em um mesmo signo ou casa (três ou mais), reconheça isso como um foco importante do mapa e mencione nessa visão geral, explicando o que esse acúmulo de energia simboliza na vida da pessoa.
-
-2. IDENTIDADE E EIXO CENTRAL: SOL, LUA, ASCENDENTE E REGENTE DO ASCENDENTE
-Explique o Sol como o centro da identidade e do propósito, a Lua como o mundo emocional e a forma como a pessoa se sente segura, e o Ascendente como a maneira como ela se apresenta e inicia as experiências.
-
-Inclua o regente do Ascendente (signo, casa e principais aspectos) como peça importante desse caminho.
-
-Ao falar de cada um (Sol, Lua, Ascendente e regente do Ascendente):
-- Mostre o que esse posicionamento traz de força, clareza, potência.
-- Mostre também onde esse padrão costuma gerar conflito interno, tensão, exagero, medo ou repetição de problema.
-
-Faça isso em parágrafos corridos, conectando as ideias, mostrando como Sol, Lua e Ascendente conversam entre si. Indique se a pessoa é mais coerente internamente ou se sente “dividida” em algumas partes de si.
-
-Se houver aspectos fortes entre Sol, Lua, Ascendente ou o regente do Ascendente, mencione dentro desta própria seção, explicando que tipo de dinâmica interna isso cria.
-
-3. PLANETAS PESSOAIS
-
-3.1 MENTE E COMUNICAÇÃO: MERCÚRIO
-Descreva como a pessoa pensa, aprende, processa informações e se comunica. Use o signo, a casa e os principais aspectos de Mercúrio, traduzindo para o dia a dia: se ela tende a ser mais racional ou intuitiva, direta ou cuidadosa, analítica ou dispersa.
-
-Mostre:
-- Quais qualidades esse padrão mental oferece (por exemplo, foco, criatividade, curiosidade, profundidade).
-- Quais armadilhas aparecem (por exemplo, ansiedade, autocrítica, dificuldade de se expressar ou de ouvir).
-
-Traga sugestões práticas simples, como tipos de estudo, formas de organização e formas de comunicação que favorecem esse Mercúrio.
-
-Ao falar de Mercúrio, já integre aspectos relevantes com outros planetas que estejam em aspecto com ele, explicando como isso impacta o pensamento e a comunicação.
-
-3.2 AFETO, VALORES E VÍNCULOS: VÊNUS
-Explique Vênus como a forma de amar, se vincular, buscar prazer e se sentir valorizada. Considere signo, casa e aspectos principais.
-
-Mostre:
-- O que essa Vênus mostra sobre os valores da pessoa, o que ela considera importante e bonito na vida.
-- Como ela tende a se comportar nos relacionamentos, o que aproxima e o que afasta.
-- Onde esse padrão pode levar a idealizações, frustrações, repetições ou dificuldades de equilíbrio.
-
-Inclua aspectos relevantes de Vênus com outros planetas que façam ligação importante com ela, sempre traduzindo para situações concretas na vida afetiva e na forma de valorizar a si mesma.
-
-3.3 DESEJO, AÇÃO E LIMITE: MARTE
-Descreva Marte como impulso, ação, coragem, raiva e forma de defender limites. Considere signo, casa e aspectos principais.
-
-Mostre:
-- Como a pessoa costuma agir quando deseja algo ou quando se sente ameaçada ou irritada.
-- Onde ela tende a se cobrar demais, explodir, segurar, adiar ou reagir de forma impulsiva.
-
-Traga exemplos práticos: modo de trabalhar, ritmo, forma de lidar com conflito, como ela lida com frustração.
-
-Inclua aspectos importantes de Marte com outros planetas que estejam em ligação forte com ele, explicando como isso modifica a expressão de Marte.
-
-3.4 INTEGRAÇÃO MERCÚRIO – VÊNUS – MARTE
-Faça um parágrafo específico integrando Mercúrio, Vênus e Marte:
-- Mostre como a pessoa pensa e organiza a mente (Mercúrio).
-- Como ela sente, valoriza e se relaciona (Vênus).
-- Como ela age, toma iniciativa e se defende (Marte).
-
-Descreva se há coerência entre o que pensa, o que quer e o que faz, ou se existem conflitos. Mostre como essa integração pode ser trabalhada no cotidiano.
-
-4. EXPANSÃO E RESPONSABILIDADE: JÚPITER E SATURNO
-Descreva Júpiter como o lugar onde a vida convida a crescer, ampliar horizontes e encontrar sentido, e Saturno como o ponto de provas, disciplina, responsabilidade e amadurecimento.
-
-Mostre:
-- Em que tipo de experiências a pessoa tende a encontrar oportunidades, crescimento e significado, se souber usar bem essa energia.
-- Em que áreas sente mais limites, cobranças, medos ou atrasos, e o que a vida pede que ela desenvolva ali.
-
-Se houver aspectos entre Júpiter e Saturno ou deles com planetas pessoais, traga isso como parte central da narrativa: como essas forças de expansão e limite se equilibram ou entram em tensão.
-
-5. TRANSFORMAÇÕES PROFUNDAS: URANO, NETUNO E PLUTÃO
-Fale de Urano, Netuno e Plutão quando forem relevantes, principalmente quando fizerem aspectos fortes com planetas pessoais ou estiverem em casas sensíveis.
-
-Descreva:
-- Onde a vida tende a chacoalhar estruturas, pedir mudança e libertação de padrões velhos.
-- Onde aumenta a sensibilidade, a necessidade de sentido e a chance de confusão ou idealização.
-- Onde existem processos intensos de crise, perda, corte, cura e renascimento.
-
-Mostre como essas energias funcionam ao longo do tempo, sem romantizar o sofrimento e sem negar que há processos profundos acontecendo.
-
-6. ÁREAS DA VIDA: CASAS COMO CENÁRIOS
-Não liste as casas como tópicos com marcadores. Escreva em texto corrido e use subtítulos em negrito para organizar por tema.
-
-Organize por temas:
-
-**Caminho pessoal e expressão criativa (Casas 1, 5 e 9)**
-Fale de como a pessoa se vê, se expressa, cria, busca significado e se arrisca. Use os signos nas cúspides e os planetas presentes nessas casas. Se houver concentração de planetas em uma dessas casas, destaque como isso se torna um foco importante de experiência.
-
-**Trabalho, dinheiro e rotina (Casas 2, 6 e 10)**
-Descreva como a pessoa lida com dinheiro, corpo, saúde, rotina, trabalho e profissão. Mostre tanto os potenciais quanto as dificuldades nesses temas, com exemplos concretos.
-
-**Relações e troca com o mundo (Casas 3, 7 e 11)**
-Explique o jeito de se comunicar, aprender com o entorno, se relacionar em parcerias e se conectar com grupos, amigos e redes. Traga exemplos que a pessoa possa reconhecer.
-
-**Emoções profundas, família e inconsciente (Casas 4, 8 e 12)**
-Fale das raízes, ambiente familiar, intimidade, temas profundos, tabus, medos, necessidade de cura e de recolhimento. Mostre como essas casas apontam processos emocionais mais delicados e importantes.
-
-7. ASPECTOS MARCANTES E PADRÕES CENTRAIS
-Escolha apenas os aspectos mais importantes entre planetas pessoais e pontos centrais do mapa, especialmente aqueles que ainda não foram detalhados nas seções anteriores.
-
-Conte a história por trás desses aspectos:
-- Que tipo de tensão interna ou talento eles mostram.
-- Que tipo de situação tende a se repetir na vida por causa desses padrões.
-
-Evite ser repetitivo. Se um aspecto já foi explicado claramente ao falar de um planeta, não repita a mesma interpretação. Use esta seção para amarrar padrões e mostrar como certas combinações se reforçam ou se compensam.
-
-8. SÍNTESE FINAL E CAMINHOS DE INTEGRAÇÃO
-Encerre com uma síntese que amarre os principais pontos da leitura: jeito de ser, pontos fortes, desafios centrais e direção de crescimento.
-
-Traga uma visão clara do que a pessoa precisa desenvolver em si para viver melhor o próprio mapa. Dê sugestões práticas simples, como tipos de terapia, estudos, práticas, atitudes e mudanças de postura que podem ajudar.
-
-A síntese deve ser objetiva, realista e encorajadora, sem prometer soluções fáceis, mas mostrando que o mapa é um manual de entendimento de si mesma, não uma sentença.
-"""
 
 # ========= Endpoints =========
-
 @app.post("/calculate", response_model=MapResult)
 async def calculate_map_endpoint(birth_data: BirthData):
-    """
-    Calcula o mapa astral completo baseado nos dados de nascimento.
-    """
+    """Calcula o mapa astral completo baseado nos dados de nascimento."""
     return calculate_map(birth_data)
+
 
 @app.post("/chat", response_model=ChatResponse)
 async def chat_endpoint(request: ChatRequest):
@@ -545,49 +526,65 @@ async def chat_endpoint(request: ChatRequest):
     Aceita mensagem do usuário, dados do mapa (se disponível) e histórico de conversa.
     """
     if not GOOGLE_API_KEY:
-        raise HTTPException(status_code=503, detail="Serviço de IA não configurado. Configure GOOGLE_API_KEY.")
-    
+        raise HTTPException(
+            status_code=503,
+            detail="Serviço de IA não configurado. Configure GOOGLE_API_KEY.",
+        )
+
     try:
         # Criar o modelo
-        model = genai.GenerativeModel('gemini-2.0-flash')
-        
+        model = genai.GenerativeModel("gemini-2.0-flash")
+
         # Preparar histórico de conversa
         chat_history = []
-        
+
         # Adicionar instruções do sistema
         chat_history.append({"role": "user", "parts": [INSTRUCOES_SISTEMA]})
-        chat_history.append({"role": "model", "parts": ["Entendido. Sou o Astro IA e seguirei todas as diretrizes fornecidas para análises astrológicas profundas e técnicas."]})
-        
+        chat_history.append(
+            {
+                "role": "model",
+                "parts": [
+                    "Entendido. Sou o Astro IA e seguirei todas as diretrizes fornecidas para análises astrológicas profundas e técnicas."
+                ],
+            }
+        )
+
         # Se houver dados do mapa, adicionar ao contexto
         if request.map_data:
             contexto_mapa = f"""
-            DADOS TÉCNICOS DO MAPA NATAL:
-            {json.dumps(request.map_data, ensure_ascii=False, indent=2)}
-            
-            Use estes dados para fornecer análises precisas e contextualizadas.
-            """
+DADOS TÉCNICOS DO MAPA NATAL:
+{json.dumps(request.map_data, ensure_ascii=False, indent=2)}
+
+Use estes dados para fornecer análises precisas e contextualizadas.
+"""
             chat_history.append({"role": "user", "parts": [contexto_mapa]})
-            chat_history.append({"role": "model", "parts": ["Dados do mapa recebidos. Pronto para análise."]})
-        
+            chat_history.append(
+                {
+                    "role": "model",
+                    "parts": ["Dados do mapa recebidos. Pronto para análise."],
+                }
+            )
+
         # Adicionar histórico de mensagens anteriores
-        for msg in request.history:
-            role = "model" if msg.role == "assistant" else "user"  
+        for msg in request.history or []:
+            role = "model" if msg.role == "assistant" else "user"
             chat_history.append({"role": role, "parts": [msg.content]})
-        
+
         # Iniciar chat e enviar mensagem
         chat = model.start_chat(history=chat_history)
         response = chat.send_message(request.message)
-        
+
         return ChatResponse(response=response.text)
-        
+
     except Exception as e:
-        raise HTTPException(status_code=500, detail=f"Erro ao processar resposta da IA: {str(e)}")
+        raise HTTPException(
+            status_code=500, detail=f"Erro ao processar resposta da IA: {str(e)}"
+        )
+
 
 @app.get("/")
 async def read_root():
-    """
-    Endpoint raiz com informações sobre a API.
-    """
+    """Endpoint raiz com informações sobre a API."""
     return {
         "message": "API de Mapa Astral ativa!",
         "version": "12.0",
@@ -595,34 +592,34 @@ async def read_root():
             "/docs": "Documentação interativa da API",
             "/calculate": "POST - Calcular mapa astral",
             "/chat": "POST - Chat com IA astrológica",
-            "/generate-report": "POST - Gerar relatório completo em PDF"
-        }
+            "/generate-report": "POST - Gerar relatório completo em PDF",
+        },
     }
-    
+
+
 @app.get("/health")
 async def health_check():
-    """
-    Endpoint de health check para monitoramento.
-    """
+    """Endpoint de health check para monitoramento."""
     return {
         "status": "healthy",
         "gemini_configured": GOOGLE_API_KEY is not None,
-        "database": "connected"
+        "database": "connected",
     }
 
+
 # ==================== NOVOS ENDPOINTS ====================
-
 # ========= Modelos Pydantic para Request/Response =========
-
 class UserRegister(BaseModel):
     email: str
     username: str
     password: str
     full_name: Optional[str] = None
 
+
 class UserLogin(BaseModel):
     email: str
     password: str
+
 
 class UserResponse(BaseModel):
     id: int
@@ -630,14 +627,16 @@ class UserResponse(BaseModel):
     username: str
     full_name: Optional[str]
     is_premium: bool
-    
+
     class Config:
         from_attributes = True
+
 
 class TokenResponse(BaseModel):
     access_token: str
     token_type: str
     user: UserResponse
+
 
 class BirthChartCreate(BaseModel):
     name: Optional[str] = None
@@ -645,6 +644,7 @@ class BirthChartCreate(BaseModel):
     birth_time: str
     birth_city: str
     birth_country: str
+
 
 class BirthChartResponse(BaseModel):
     id: int
@@ -656,25 +656,29 @@ class BirthChartResponse(BaseModel):
     birth_country: str
     chart_data: Optional[Dict]
     created_at: datetime
-    
+
     class Config:
         from_attributes = True
+
 
 class ConversationCreate(BaseModel):
     birth_chart_id: Optional[int] = None
     title: Optional[str] = None
 
+
 class MessageCreate(BaseModel):
     message: str
+
 
 class MessageResponse(BaseModel):
     id: int
     role: str
     content: str
     created_at: datetime
-    
+
     class Config:
         from_attributes = True
+
 
 class ConversationResponse(BaseModel):
     id: int
@@ -682,94 +686,92 @@ class ConversationResponse(BaseModel):
     created_at: datetime
     updated_at: datetime
     messages: List[MessageResponse] = []
-    
+
     class Config:
         from_attributes = True
 
-# ========= Endpoints de Autenticação =========
 
+# ========= Endpoints de Autenticação =========
 @app.post("/auth/register", response_model=UserResponse)
 async def register(user_data: UserRegister, db: Session = Depends(get_db)):
-    """
-    Registrar novo usuário
-    """
+    """Registrar novo usuário"""
     # Verificar se email já existe
-    existing_user = db.query(models.User).filter(models.User.email == user_data.email).first()
+    existing_user = (
+        db.query(models.User).filter(models.User.email == user_data.email).first()
+    )
     if existing_user:
         raise HTTPException(status_code=400, detail="Email já cadastrado")
-    
+
     # Verificar se username já existe
-    existing_username = db.query(models.User).filter(models.User.username == user_data.username).first()
+    existing_username = (
+        db.query(models.User)
+        .filter(models.User.username == user_data.username)
+        .first()
+    )
     if existing_username:
         raise HTTPException(status_code=400, detail="Username já cadastrado")
-    
+
     # Criar novo usuário
     hashed_password = auth.get_password_hash(user_data.password)
     new_user = models.User(
         email=user_data.email,
         username=user_data.username,
         hashed_password=hashed_password,
-        full_name=user_data.full_name
+        full_name=user_data.full_name,
     )
     db.add(new_user)
     db.commit()
     db.refresh(new_user)
-    
     return new_user
+
 
 @app.post("/auth/login", response_model=TokenResponse)
 async def login(credentials: UserLogin, db: Session = Depends(get_db)):
-    """
-    Login e geração de token JWT
-    """
+    """Login e geração de token JWT"""
     user = auth.authenticate_user(db, credentials.email, credentials.password)
     if not user:
-        raise HTTPException(
-            status_code=401,
-            detail="Email ou senha incorretos"
-        )
-    
+        raise HTTPException(status_code=401, detail="Email ou senha incorretos")
+
     # Criar token
     access_token = auth.create_access_token(data={"sub": user.id})
-    
+
     return TokenResponse(
         access_token=access_token,
         token_type="bearer",
-        user=UserResponse.model_validate(user)
+        user=UserResponse.model_validate(user),
     )
 
+
 @app.get("/auth/me", response_model=UserResponse)
-async def get_current_user_info(current_user: models.User = Depends(auth.get_current_user)):
-    """
-    Obter informações do usuário atual
-    """
+async def get_current_user_info(
+    current_user: models.User = Depends(auth.get_current_user),
+):
+    """Obter informações do usuário atual"""
     return current_user
 
-# ========= Endpoints de Birth Charts =========
 
+# ========= Endpoints de Birth Charts =========
 @app.post("/charts", response_model=BirthChartResponse)
 async def create_birth_chart(
     chart_data: BirthChartCreate,
     current_user: models.User = Depends(auth.get_current_user),
-    db: Session = Depends(get_db)
+    db: Session = Depends(get_db),
 ):
-    """
-    Criar novo mapa astral e calcular dados
-    """
+    """Criar novo mapa astral e calcular dados"""
     # Calcular mapa usando a função existente
     birth_data = BirthData(
         date=chart_data.birth_date,
         time=chart_data.birth_time,
         city=chart_data.birth_city,
-        country=chart_data.birth_country
+        country=chart_data.birth_country,
     )
-    
+
     try:
         calculated_map = calculate_map(birth_data)
         chart_data_json = calculated_map.dict()
     except Exception as e:
         raise HTTPException(status_code=400, detail=f"Erro ao calcular mapa: {str(e)}")
-    
+
     # Salvar no banco
     new_chart = models.BirthChart(
         user_id=current_user.id,
@@ -778,241 +780,244 @@ async def create_birth_chart(
         birth_time=chart_data.birth_time,
         birth_city=chart_data.birth_city,
         birth_country=chart_data.birth_country,
-        chart_data=chart_data_json
+        chart_data=chart_data_json,
     )
     db.add(new_chart)
     db.commit()
     db.refresh(new_chart)
-    
     return new_chart
+
 
 @app.get("/charts", response_model=List[BirthChartResponse])
 async def list_birth_charts(
     current_user: models.User = Depends(auth.get_current_user),
-    db: Session = Depends(get_db)
+    db: Session = Depends(get_db),
 ):
-    """
-    Listar todos os mapas do usuário
-    """
-    charts = db.query(models.BirthChart).filter(
-        models.BirthChart.user_id == current_user.id
-    ).all()
+    """Listar todos os mapas do usuário"""
+    charts = (
+        db.query(models.BirthChart)
+        .filter(models.BirthChart.user_id == current_user.id)
+        .all()
+    )
     return charts
+
 
 @app.get("/charts/{chart_id}", response_model=BirthChartResponse)
 async def get_birth_chart(
     chart_id: int,
     current_user: models.User = Depends(auth.get_current_user),
-    db: Session = Depends(get_db)
+    db: Session = Depends(get_db),
 ):
-    """
-    Obter um mapa específico
-    """
-    chart = db.query(models.BirthChart).filter(
-        models.BirthChart.id == chart_id,
-        models.BirthChart.user_id == current_user.id
-    ).first()
-    
+    """Obter um mapa específico"""
+    chart = (
+        db.query(models.BirthChart)
+        .filter(
+            models.BirthChart.id == chart_id,
+            models.BirthChart.user_id == current_user.id,
+        )
+        .first()
+    )
     if not chart:
         raise HTTPException(status_code=404, detail="Mapa não encontrado")
-    
     return chart
+
 
 @app.delete("/charts/{chart_id}")
 async def delete_birth_chart(
     chart_id: int,
     current_user: models.User = Depends(auth.get_current_user),
-    db: Session = Depends(get_db)
+    db: Session = Depends(get_db),
 ):
-    """
-    Deletar um mapa
-    """
-    chart = db.query(models.BirthChart).filter(
-        models.BirthChart.id == chart_id,
-        models.BirthChart.user_id == current_user.id
-    ).first()
-    
+    """Deletar um mapa"""
+    chart = (
+        db.query(models.BirthChart)
+        .filter(
+            models.BirthChart.id == chart_id,
+            models.BirthChart.user_id == current_user.id,
+        )
+        .first()
+    )
     if not chart:
         raise HTTPException(status_code=404, detail="Mapa não encontrado")
-    
+
     db.delete(chart)
     db.commit()
-    
     return {"message": "Mapa deletado com sucesso"}
 
-# ========= Endpoints de Conversas =========
 
+# ========= Endpoints de Conversas =========
 @app.post("/conversations", response_model=ConversationResponse)
 async def create_conversation(
     conv_data: ConversationCreate,
     current_user: models.User = Depends(auth.get_current_user),
-    db: Session = Depends(get_db)
+    db: Session = Depends(get_db),
 ):
-    """
-    Criar nova conversa
-    """
+    """Criar nova conversa"""
     new_conversation = models.Conversation(
         user_id=current_user.id,
         birth_chart_id=conv_data.birth_chart_id,
-        title=conv_data.title or "Nova Conversa"
+        title=conv_data.title or "Nova Conversa",
     )
     db.add(new_conversation)
     db.commit()
     db.refresh(new_conversation)
-    
     return new_conversation
+
 
 @app.get("/conversations", response_model=List[ConversationResponse])
 async def list_conversations(
     current_user: models.User = Depends(auth.get_current_user),
-    db: Session = Depends(get_db)
+    db: Session = Depends(get_db),
 ):
-    """
-    Listar todas as conversas do usuário
-    """
-    conversations = db.query(models.Conversation).filter(
-        models.Conversation.user_id == current_user.id
-    ).order_by(models.Conversation.updated_at.desc()).all()
-    
+    """Listar todas as conversas do usuário"""
+    conversations = (
+        db.query(models.Conversation)
+        .filter(models.Conversation.user_id == current_user.id)
+        .order_by(models.Conversation.updated_at.desc())
+        .all()
+    )
     return conversations
+
 
 @app.get("/conversations/{conversation_id}", response_model=ConversationResponse)
 async def get_conversation(
     conversation_id: int,
     current_user: models.User = Depends(auth.get_current_user),
-    db: Session = Depends(get_db)
+    db: Session = Depends(get_db),
 ):
-    """
-    Obter conversa específica com todo o histórico de mensagens
-    """
-    conversation = db.query(models.Conversation).filter(
-        models.Conversation.id == conversation_id,
-        models.Conversation.user_id == current_user.id
-    ).first()
-    
+    """Obter conversa específica com todo o histórico de mensagens"""
+    conversation = (
+        db.query(models.Conversation)
+        .filter(
+            models.Conversation.id == conversation_id,
+            models.Conversation.user_id == current_user.id,
+        )
+        .first()
+    )
     if not conversation:
         raise HTTPException(status_code=404, detail="Conversa não encontrada")
-    
     return conversation
+
 
 @app.post("/conversations/{conversation_id}/messages", response_model=MessageResponse)
 async def send_message(
     conversation_id: int,
     message_data: MessageCreate,
     current_user: models.User = Depends(auth.get_current_user),
-    db: Session = Depends(get_db)
+    db: Session = Depends(get_db),
 ):
-    """
-    Enviar mensagem em uma conversa e receber resposta da IA
-    """
+    """Enviar mensagem em uma conversa e receber resposta da IA"""
     # Verificar se a conversa existe e pertence ao usuário
-    conversation = db.query(models.Conversation).filter(
-        models.Conversation.id == conversation_id,
-        models.Conversation.user_id == current_user.id
-    ).first()
-    
+    conversation = (
+        db.query(models.Conversation)
+        .filter(
+            models.Conversation.id == conversation_id,
+            models.Conversation.user_id == current_user.id,
+        )
+        .first()
+    )
     if not conversation:
         raise HTTPException(status_code=404, detail="Conversa não encontrada")
-    
+
     # Salvar mensagem do usuário
     user_message = models.Message(
-        conversation_id=conversation_id,
-        role="user",
-        content=message_data.message
+        conversation_id=conversation_id, role="user", content=message_data.message
     )
     db.add(user_message)
     db.commit()
-    
+
     # Buscar histórico de mensagens da conversa
-    messages = db.query(models.Message).filter(
-        models.Message.conversation_id == conversation_id
-    ).order_by(models.Message.created_at).all()
-    
+    messages = (
+        db.query(models.Message)
+        .filter(models.Message.conversation_id == conversation_id)
+        .order_by(models.Message.created_at)
+        .all()
+    )
+
     # Buscar dados do mapa se houver
     map_data = None
     if conversation.birth_chart_id:
-        chart = db.query(models.BirthChart).filter(
-            models.BirthChart.id == conversation.birth_chart_id
-        ).first()
+        chart = (
+            db.query(models.BirthChart)
+            .filter(models.BirthChart.id == conversation.birth_chart_id)
+            .first()
+        )
         if chart:
             map_data = chart.chart_data
-    
-    # Chamar IA (usando o endpoint /chat interno)
+
+    # Chamar IA
     try:
-        history = [ChatMessage(role=msg.role, content=msg.content) for msg in messages[:-1]]  # Exclude last message
-        
-        chat_request = ChatRequest(
-            message=message_data.message,
-            map_data=map_data,
-            history=history
-        )
-        
-        # Chamar função de chat diretamente
+        history = [
+            ChatMessage(role=msg.role, content=msg.content) for msg in messages[:-1]
+        ]  # Exclui última (mensagem atual)
+
         if not GOOGLE_API_KEY:
             raise HTTPException(status_code=503, detail="IA não configurada")
-        
-        model = genai.GenerativeModel('gemini-2.0-flash')
+
+        model = genai.GenerativeModel("gemini-2.0-flash")
         chat_history = []
         chat_history.append({"role": "user", "parts": [INSTRUCOES_SISTEMA]})
         chat_history.append({"role": "model", "parts": ["Entendido."]})
-        
+
         if map_data:
-            contexto_mapa = f"DADOS DO MAPA:\\n{json.dumps(map_data, ensure_ascii=False, indent=2)}"
+            contexto_mapa = "DADOS DO MAPA:\n" + json.dumps(
+                map_data, ensure_ascii=False, indent=2
+            )
             chat_history.append({"role": "user", "parts": [contexto_mapa]})
             chat_history.append({"role": "model", "parts": ["Dados recebidos."]})
-        
+
         for msg in history:
             role = "model" if msg.role == "assistant" else "user"
             chat_history.append({"role": role, "parts": [msg.content]})
-        
+
         chat = model.start_chat(history=chat_history)
         response = chat.send_message(message_data.message)
-        
+
         # Salvar resposta da IA
         assistant_message = models.Message(
-            conversation_id=conversation_id,
-            role="assistant",
-            content=response.text
+            conversation_id=conversation_id, role="assistant", content=response.text
         )
         db.add(assistant_message)
-        
+
         # Atualizar timestamp da conversa
         conversation.updated_at = datetime.utcnow()
-        
         db.commit()
         db.refresh(assistant_message)
-        
+
         return assistant_message
-        
+
     except Exception as e:
-        raise HTTPException(status_code=500, detail=f"Erro ao processar resposta da IA: {str(e)}")
+        raise HTTPException(
+            status_code=500, detail=f"Erro ao processar resposta da IA: {str(e)}"
+        )
+
 
 @app.delete("/conversations/{conversation_id}")
 async def delete_conversation(
     conversation_id: int,
     current_user: models.User = Depends(auth.get_current_user),
-    db: Session = Depends(get_db)
+    db: Session = Depends(get_db),
 ):
-    """
-    Deletar conversa
-    """
-    conversation = db.query(models.Conversation).filter(
-        models.Conversation.id == conversation_id,
-        models.Conversation.user_id == current_user.id
-    ).first()
-    
+    """Deletar conversa"""
+    conversation = (
+        db.query(models.Conversation)
+        .filter(
+            models.Conversation.id == conversation_id,
+            models.Conversation.user_id == current_user.id,
+        )
+        .first()
+    )
     if not conversation:
         raise HTTPException(status_code=404, detail="Conversa não encontrada")
-    
+
     db.delete(conversation)
     db.commit()
-    
     return {"message": "Conversa deletada com sucesso"}
 
-# ========= Endpoint de Geração de Relatório (JSON) =========
 
-from report_prompt import get_report_prompt
+# ========= Endpoint de Geração de Relatório (JSON) =========
 import re
+
 
 class AnalysisResponse(BaseModel):
     name: str
@@ -1021,63 +1026,94 @@ class AnalysisResponse(BaseModel):
     sections: Dict[str, str]
     question: Optional[str] = None
 
+
 @app.post("/generate-report", response_model=AnalysisResponse)
 async def generate_report_endpoint(request: ReportRequest):
     """
     Gera análise astrológica completa e retorna JSON.
-    
+
     Fluxo:
     1. Calcula mapa astral
-    2. Gera análise completa com IA (9 seções)
+    2. Gera análise completa com IA
     3. Retorna JSON estruturado para exibição no frontend
     """
     if not GOOGLE_API_KEY:
-        raise HTTPException(status_code=503, detail="Serviço de IA não configurado. Configure GOOGLE_API_KEY.")
-    
+        raise HTTPException(
+            status_code=503,
+            detail="Serviço de IA não configurado. Configure GOOGLE_API_KEY.",
+        )
+
+    try:
+        # Import aqui pra não quebrar o app se o arquivo ainda não existe
+        from report_prompt import get_report_prompt  # noqa: F401
+    except Exception as e:
+        raise HTTPException(
+            status_code=500,
+            detail=f"report_prompt.py não encontrado ou com erro. Crie o arquivo e a função get_report_prompt(...). Detalhe: {str(e)}",
+        )
+
     try:
         # 1. Calcular mapa astral
         birth_data = BirthData(
             date=request.date,
             time=request.time,
             city=request.city,
-            country=request.country
+            country=request.country,
         )
         map_result = calculate_map(birth_data)
-        
+
         # 2. Preparar dados para a IA
         map_data_dict = {
             "positions": [p.dict() for p in map_result.positions],
             "houses": [h.dict() for h in map_result.houses],
             "aspects": [a.dict() for a in map_result.aspects],
             "elements": map_result.elements,
-            "quadruplicities": map_result.quadruplicities
+            "quadruplicities": map_result.quadruplicities,
         }
-        
+
         # 3. Gerar prompt estruturado
         prompt = get_report_prompt(request.name, map_data_dict, request.question)
-        
+
         # 4. Enviar para IA e obter análise completa
-        model = genai.GenerativeModel('gemini-2.0-flash')
+        model = genai.GenerativeModel("gemini-2.0-flash")
         response = model.generate_content(prompt)
-        
+
         # 5. Parsear resposta da IA em seções
         analysis_text = response.text
-        
-        # Extrair seções do HTML retornado pela IA
-        sections = {
-            'visao_geral': extract_section(analysis_text, 'VISÃO GERAL', 'ANÁLISE DA TRÍADE'),
-            'triade_principal': extract_section(analysis_text, 'TRÍADE PRINCIPAL', 'PLANETAS PESSOAIS'),
-            'planetas_pessoais': extract_section(analysis_text, 'PLANETAS PESSOAIS', 'JÚPITER E SATURNO'),
-            'jupiter_saturno': extract_section(analysis_text, 'JÚPITER E SATURNO', 'MEIO-CÉU'),
-            'meio_ceu': extract_section(analysis_text, 'MEIO-CÉU', 'CASAS ASTROLÓGICAS'),
-            'casas': extract_section(analysis_text, 'CASAS ASTROLÓGICAS', 'PRINCIPAIS ASPECTOS'),
-            'aspectos': extract_section(analysis_text, 'PRINCIPAIS ASPECTOS', 'PONTOS KÁRMICOS'),
-            'pontos_karmicos': extract_section(analysis_text, 'PONTOS KÁRMICOS', 'RESPOSTA À PERGUNTA' if request.question else None),
+        sections: Dict[str, str] = {
+            "visao_geral": extract_section(
+                analysis_text, "VISÃO GERAL", "ANÁLISE DA TRÍADE"
+            ),
+            "triade_principal": extract_section(
+                analysis_text, "TRÍADE PRINCIPAL", "PLANETAS PESSOAIS"
+            ),
+            "planetas_pessoais": extract_section(
+                analysis_text, "PLANETAS PESSOAIS", "JÚPITER E SATURNO"
+            ),
+            "jupiter_saturno": extract_section(
+                analysis_text, "JÚPITER E SATURNO", "MEIO-CÉU"
+            ),
+            "meio_ceu": extract_section(
+                analysis_text, "MEIO-CÉU", "CASAS ASTROLÓGICAS"
+            ),
+            "casas": extract_section(
+                analysis_text, "CASAS ASTROLÓGICAS", "PRINCIPAIS ASPECTOS"
+            ),
+            "aspectos": extract_section(
+                analysis_text, "PRINCIPAIS ASPECTOS", "PONTOS KÁRMICOS"
+            ),
+            "pontos_karmicos": extract_section(
+                analysis_text,
+                "PONTOS KÁRMICOS",
+                "RESPOSTA À PERGUNTA" if request.question else None,
+            ),
         }
-        
+
         if request.question:
-            sections['resposta_pergunta'] = extract_section(analysis_text, 'RESPOSTA À PERGUNTA', None)
-        
+            sections["resposta_pergunta"] = extract_section(
+                analysis_text, "RESPOSTA À PERGUNTA", None
+            )
+
         # 6. Retornar JSON estruturado
         return AnalysisResponse(
             name=request.name,
@@ -1085,94 +1121,89 @@ async def generate_report_endpoint(request: ReportRequest):
                 "date": request.date,
                 "time": request.time,
                 "city": request.city,
-                "country": request.country
+                "country": request.country,
             },
             map_data=map_data_dict,
             sections=sections,
-            question=request.question
+            question=request.question,
         )
-        
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Erro ao gerar relatório: {str(e)}")
 
-def extract_section(text: str, start_marker: str, end_marker: str = None) -> str:
-    """
-    Extrai uma seção do texto da IA baseado em marcadores
-    """
+
+def extract_section(text: str, start_marker: str, end_marker: Optional[str] = None) -> str:
+    """Extrai uma seção do texto da IA baseado em marcadores"""
     try:
-        # Procurar pelo marcador de início (case insensitive)
         start_pattern = re.compile(re.escape(start_marker), re.IGNORECASE)
         start_match = start_pattern.search(text)
-        
         if not start_match:
             return f"<p>Seção {start_marker} não encontrada na análise.</p>"
-        
+
         start_pos = start_match.end()
-        
-        # Se houver marcador de fim, procurar por ele
+
         if end_marker:
             end_pattern = re.compile(re.escape(end_marker), re.IGNORECASE)
             end_match = end_pattern.search(text, start_pos)
             if end_match:
-                return text[start_pos:end_match.start()].strip()
-        
-        # Se não houver marcador de fim, pegar até o final
+                return text[start_pos : end_match.start()].strip()
+
         return text[start_pos:].strip()
-        
+
     except Exception as e:
         return f"<p>Erro ao extrair seção: {str(e)}</p>"
 
-# ========= Endpoint de Geração de SVG do Mapa Astral =========
 
+# ========= Endpoint de Geração de SVG do Mapa Astral =========
 class ChartSVGRequest(BaseModel):
     name: str
-    date: str      # Formato DD/MM/YYYY
-    time: str      # Formato HH:MM
+    date: str  # Formato DD/MM/YYYY ou DD/MM/AAAA
+    time: str  # Formato HH:MM
     city: str
     country: str
-    custom_colors: Optional[bool] = True  # Se True, usa cores do Portal Urano
+    custom_colors: Optional[bool] = True  # Se True, usa paleta Portal Urano
+
 
 @app.post("/generate-chart-svg")
 async def generate_chart_svg_endpoint(request: ChartSVGRequest):
     """
-    Gera gráfico SVG do mapa astral
-    
-    Retorna um SVG customizável com as cores do Portal Urano
+    Gera gráfico SVG do mapa astral com as cores do Portal Urano.
+
+    Fluxo:
+    1. Calcula o mapa astral completo (usando a própria API: casas, planetas, aspectos, etc.)
+    2. Converte o MapResult para dict
+    3. Gera o SVG com generate_chart_svg(...)
     """
     try:
-        # Configurar cores customizadas
-        colors = None
-        if request.custom_colors:
-            colors = CustomChartColors()
-            # Personalizar com as cores do Portal Urano
-            colors.zodiac_ring_color = "#893f89"  # Roxo do Portal
-            colors.fire_color = "#FF6B6B"
-            colors.earth_color = "#8B4513"
-            colors.air_color = "#87CEEB"
-            colors.water_color = "#4682B4"
-        
-        # Gerar SVG
-        svg_content = generate_chart_svg_from_birth_data(
-            name=request.name,
+        birth_data = BirthData(
             date=request.date,
             time=request.time,
             city=request.city,
             country=request.country,
-            custom_colors=colors
         )
-        
-        # Retornar SVG como resposta
+
+        map_result = calculate_map(birth_data)
+
+        colors = CustomChartColors() if request.custom_colors else None
+
+        svg_content = generate_chart_svg(
+            name=request.name,
+            map_data=map_result.dict(),
+            colors=colors,
+        )
+
         return Response(
             content=svg_content,
             media_type="image/svg+xml",
             headers={
                 "Content-Disposition": f"inline; filename=mapa_astral_{request.name.replace(' ', '_')}.svg"
-            }
+            },
         )
-        
+
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Erro ao gerar gráfico SVG: {str(e)}")
 
+
 if __name__ == "__main__":
     import uvicorn
+
     uvicorn.run("main:app", host="0.0.0.0", port=8000, reload=True)
