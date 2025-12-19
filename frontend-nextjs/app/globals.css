@@ -1,7 +1,7 @@
 ﻿/* Custom Font */
 @font-face {
-    font-family: 'TAN AEGEAN';
-    src: url('/TAN AEGEAN Regular.woff2') format('woff2');
+    font-family: 'buster';
+    src: url('/TANBUSTER-Bold.woff2') format('woff2');
     font-weight: normal;
     font-style: normal;
 }
@@ -198,7 +198,7 @@ body::before {
 
 /* Main Content Area */
 .main-content {
-    margin-left: 256px;
+    margin-left: 0px;
     flex: 1;
     height: 100vh;
     overflow-y: auto;
@@ -215,9 +215,22 @@ body::before {
     display: block;
 }
 
+/* Roxo do tema no título */
+.sidebar-category-title--accent {
+    color: var(--portal-purple, #893f89);
+  }
+  
+  /* Itens “em breve” com transparência e sem clique */
+  .sidebar-button--disabled {
+    opacity: 0.55;
+    cursor: default;
+    pointer-events: none;
+  }
+  
+
 /* Internal Pages Styles */
 .main-content> :not(#home-page) {
-    background-color: #e1d5be;
+    background-color: #fff9eb;
     min-height: 100vh;
     padding: 0;
 }
@@ -260,8 +273,8 @@ body::before {
 }
 
 .welcome-message h1 {
-    font-family: 'TAN AEGEAN', serif;
-    font-size: 2.5rem;
+    font-family: 'buster', serif;
+    font-size: 15px;
     color: #893f89;
     margin-bottom: 16px;
 }
@@ -309,7 +322,7 @@ body::before {
 }
 
 .home-title {
-    font-family: 'TAN AEGEAN', serif;
+    font-family: 'buster', serif;
     font-size: 2.0rem;
     font-weight: 700;
     margin-bottom: 10px;
@@ -489,7 +502,7 @@ body::before {
 }
 
 .card-title {
-    font-family: 'TAN AEGEAN', serif;
+    font-family: 'buster', serif;
     font-size: 1.5rem;
     color: #c7a7eb;
     margin-bottom: 24px;
@@ -802,7 +815,7 @@ body::before {
 .report-content h2,
 .report-content h3,
 .report-content h4 {
-    font-family: 'TAN AEGEAN', serif;
+    font-family: 'buster', serif;
     color: #893f89;
     /* Purple accent */
     margin-top: 2rem;
@@ -854,3 +867,128 @@ body::before {
 }
 
 
+/* ==== LOGIN PAGE ==== */
+
+.login-page {
+    min-height: 100vh;
+    width: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: #050716; /* fundo escuro */
+    background-image: url('/stars_background.png');
+  }
+  
+  .login-box {
+    width: 100%;
+    max-width: 420px;
+    background: #111827;
+    border-radius: 16px;
+    border: 1px solid #893f89;
+    padding: 24px 28px;
+    box-shadow: 0 18px 40px rgba(0, 0, 0, 0.55);
+    color: #f9fafb;
+  }
+  
+  .login-box h1 {
+    font-size: 22px;
+    margin-bottom: 8px;
+    color: #f3e8ff;
+  }
+  
+  .login-subtitle {
+    font-size: 13px;
+    color: #9ca3af;
+    margin-bottom: 20px;
+  }
+  
+  .login-form {
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+    margin-bottom: 10px;
+  }
+  
+  .login-field label {
+    display: block;
+    font-size: 13px;
+    color: #e5e7eb;
+    margin-bottom: 4px;
+  }
+  
+  .login-field input {
+    width: 100%;
+    border-radius: 8px;
+    border: 1px solid #4b5563;
+    background: #020617;
+    padding: 8px 10px;
+    color: #f9fafb;
+    font-size: 14px;
+  }
+  
+  .login-field input:focus {
+    outline: none;
+    border-color: #893f89;
+  }
+  
+  .login-button {
+    margin-top: 8px;
+    width: 100%;
+    border-radius: 999px;
+    border: 1px solid #893f89;
+    padding: 9px 14px;
+    font-size: 14px;
+    font-weight: 500;
+    background: #893f89;
+    color: #ffffff;
+    cursor: pointer;
+    transition: background-color 0.2s ease, transform 0.1s ease;
+  }
+  
+  .login-button:hover {
+    background-color: #b25cb4;
+    transform: translateY(-1px);
+  }
+  
+  .login-small-text {
+    font-size: 12px;
+    color: #9ca3af;
+    margin-top: 6px;
+  }
+  /* Botão de login na faixa superior */
+
+.texture-banner {
+    position: relative; /* pra conseguir posicionar o botão dentro dela */
+  }
+  
+  .top-login-area {
+    position: absolute;
+    right: 40px;
+    top: 15px;
+    display: flex;
+    align-items: center;
+  }
+  
+  .top-login-button {
+    border-radius: 12px;          /* canto arredondado, mas não pílula */
+    border: none;
+    padding: 8px 20px;
+    background-color: #893f89;    /* roxo padrão */
+    color: #f9fafb;
+    font-size: 14px;
+    font-weight: 500;
+    cursor: pointer;
+    text-decoration: none;
+    transition: background-color 0.2s ease, transform 0.1s ease;
+  }
+  
+  .top-login-button:hover {
+    background-color: #a64fb0;    /* roxo um pouco mais claro no hover */
+    transform: translateY(-1px);
+  }
+  .login-error {
+    font-size: 12px;
+    color: #f97373; /* vermelho suave */
+    margin-top: 4px;
+  }
+  

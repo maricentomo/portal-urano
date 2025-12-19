@@ -1,0 +1,12 @@
+.env
+__pycache__/
+*.pyc
+*.pyo
+*.db
+*.sqlite3
+.vscode/
+.idea/
+.DS_Store
+frontend-nextjs/node_modules/
+frontend-nextjs/.next/
+frontend-nextjs/out/
