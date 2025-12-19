@@ -15,3 +15,4 @@ Pillow
 kerykeion
 anthropic
 stripe
+python-dotenv
